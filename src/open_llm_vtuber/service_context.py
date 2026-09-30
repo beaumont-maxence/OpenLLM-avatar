@@ -119,18 +119,16 @@ class ServiceContext:
                 return  # Exit if ToolAdapter is mandatory and not initialized
 
             try:
-                (
-                    mcp_prompt_string,
-                    openai_tools,
-                    claude_tools,
-                ) = await self.tool_adapter.get_tools(enabled_servers)
+                mcp_prompt_string, openai_tools = await self.tool_adapter.get_tools(
+                    enabled_servers
+                )
                 # Store the generated prompt string
                 self.mcp_prompt = mcp_prompt_string
                 logger.info(
                     f"Dynamically generated MCP prompt string (length: {len(self.mcp_prompt)})."
                 )
                 logger.info(
-                    f"Dynamically formatted tools - OpenAI: {len(openai_tools)}, Claude: {len(claude_tools)}."
+                    f"Dynamically formatted tools - OpenAI: {len(openai_tools)}."
                 )
 
                 # 3. Initialize ToolManager with the fetched formatted tools
@@ -140,7 +138,6 @@ class ServiceContext:
                 )
                 self.tool_manager = ToolManager(
                     formatted_tools_openai=openai_tools,
-                    formatted_tools_claude=claude_tools,
                     initial_tools_dict=raw_tools_dict,
                 )
                 logger.info("ToolManager initialized with dynamically fetched tools.")
@@ -443,10 +440,7 @@ class ServiceContext:
         logger.debug(f"constructing persona_prompt: '''{persona_prompt}'''")
 
         for prompt_name, prompt_file in self.system_config.tool_prompts.items():
-            if (
-                prompt_name == "group_conversation_prompt"
-                or prompt_name == "proactive_speak_prompt"
-            ):
+            if prompt_name == "proactive_speak_prompt":
                 continue
 
             prompt_content = prompt_loader.load_util(prompt_file)

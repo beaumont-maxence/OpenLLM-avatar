@@ -49,18 +49,19 @@ character_config:
 
   # --- Override TTS Config ---
   tts_config:
-    tts_model: 'edge_tts'
-    edge_tts:
-      voice: 'en-US-GuyNeural' # Use a different voice
+    tts_model: 'sherpa_onnx_tts'
+    sherpa_onnx_tts:
+      sid: 0
+      speed: 1.1 # Slightly faster speech
 
   # --- Override Agent and LLM Config ---
   agent_config:
     agent_settings:
       basic_memory_agent:
-        llm_provider: 'openai_llm' # Specify OpenAI for this character
+        llm_provider: 'ollama_llm'
     llm_configs:
-      openai_llm:
-        model: 'gpt-4o-mini' # Use a faster model
+      ollama_llm:
+        model: 'qwen3.5:9b-mlx' # Any model from `ollama list`
         temperature: 0.5
 ```
 

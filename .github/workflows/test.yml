@@ -1,12 +1,22 @@
 name: Tests
 on: [ push, pull_request ]
+
+permissions:
+  contents: read
+
 jobs:
   pytest:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ windows-latest, macos-latest ]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-      - run: uv sync --group dev
+      # --locked: fail instead of re-resolving if uv.lock is out of date with pyproject.toml.
+      # No cloud extra, so the tests also prove a local-only install imports cleanly.
+      - run: uv sync --locked --group dev
       - run: uv run pytest

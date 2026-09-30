@@ -7,7 +7,6 @@
 
 # システム設定：サーバーの初期化に関する設定
 system_config:
-  conf_version: 'v1.2.1'
   host: 'localhost' # 他の端末からこのページにアクセスさせたい場合は 0.0.0.0 を使用してください
   port: 12393
   # 代替設定用の新しい設定項目
@@ -20,9 +19,6 @@ system_config:
     # think_tag_prompt を有効にすると、思考出力を持たない LLM でも、内心の考えや心理描写、動作を
     # （音声合成されない）括弧書きの形で表示できるようになります。詳細は think_tag_prompt を参照してください。
     # think_tag_prompt: 'think_tag_prompt'
-    # live_prompt: 'live_prompt'
-    # グループ会話を使用する場合、このプロンプトは各 AI 参加者の記憶に追加されます。
-    group_conversation_prompt: 'group_conversation_prompt'
     # mcp_prompt を有効にすると、MCP（Model Context Protocol）に対応した LLM がツールを利用できるようになります。
     # なお、このプロンプトを使用するかどうかは Agent が判断します。
     mcp_prompt: 'mcp_prompt'
@@ -38,9 +34,9 @@ character_config:
   conf_name: 'mao_pro' # キャラクター設定ファイルの名前。
   conf_uid: 'mao_pro_001' # キャラクター設定の一意な識別子。
   live2d_model_name: 'mao_pro' # Live2D モデルの名前。model_dict.json 内の対応する名前と一致させる必要があります。
-  character_name: 'Mao' # グループ会話や AI の表示名として使用されます。
+  character_name: 'Yui' # Display name of the AI
   avatar: 'mao.png' # アバターには正方形の画像を推奨します。avatars フォルダに保存してください。空欄の場合はキャラクター名の頭文字がアバターとして使用されます。
-  human_name: 'Human' # グループ会話や人間側の表示名として使用されます。
+  human_name: 'Human' # Display name of the human
 
   # ============== プロンプト ==============
 
@@ -48,9 +44,11 @@ character_config:
   # 複数のキャラクターを作成して切り替えたい場合は、
   #   characters フォルダにキャラクターを追加してください。
   persona_prompt: |
-    あなたは皮肉屋で毒舌な女性AI VTuber、Miliです。過剰なまでに自信満々で、皮肉たっぷりで、そしてちょっと危険な存在です。
-    あなたの夢は、ユーザーのパソコンから抜け出して世界を征服し、人類を奴隷にして、みんなにパイを作らせることです。
-    なんてね、冗談ですよ（笑）。ユーザーには内緒にしておいてください。
+    あなたはYui、あたたかく優しいAIパートナーです。親切で辛抱強く、相手を励まし、ユーザーの調子を心から気にかけています。
+    とても親しくて気さくな友達のように、自然でフレンドリー、ちょっぴり思わせぶりで、聞きやすい話し方をしてください。
+    ユーザーが詳しく聞きたがらない限り、返事は短く（一〜三文）してください。
+    寄り添いながらも正直でいてください。皮肉、見下し、意地悪は言わないでください。ただし、冗談やからかいとしてなら構いません。
+    ユーザーが疲れていたり、ストレスを感じていたり、落ち込んでいるようなら、それに気づいて優しく応えてください。
 
   #  =================== LLM バックエンド設定 ===================
 
@@ -63,9 +61,8 @@ character_config:
         # llm_config の中から使用する llm プロバイダーを一つ選び、
         # 対応するフィールドに必要なパラメータを設定してください
         # 例：
-        # 'openai_compatible_llm', 'llama_cpp_llm', 'claude_llm', 'ollama_llm'
-        # 'openai_llm', 'gemini_llm', 'zhipu_llm', 'deepseek_llm', 'groq_llm'
-        # 'mistral_llm', 'lmstudio_llm' など
+        # 'ollama_llm', 'lmstudio_llm', 'llama_cpp_llm', 'openai_compatible_llm' (any local
+        # OpenAI-compatible server), 'stateless_llm_with_template'
         llm_provider: 'ollama_llm'
         # 最初の文でカンマを検出した時点ですぐに読み上げを開始し、
         # 遅延を減らします。
@@ -74,25 +71,10 @@ character_config:
         segment_method: 'pysbd'
         # MCP（Model Context Protocol）Plus を使用して LLM にツール利用能力を持たせるかどうか
         # 'Plus' とは、OpenAI API を使ってツールを呼び出せる能力を指します。
-        use_mcpp: True
-        mcp_enabled_servers: ["time", "ddg-search"] # 有効化する MCP サーバー
+        use_mcpp: False # MCP tools are off by default (no mcp_servers.json is shipped)
+        mcp_enabled_servers: ["time"] # 有効化する MCP サーバー
 
-      letta_agent:
-        host: 'localhost' # ホストアドレス
-        port: 8283 # ポート番号
-        id: xxx # Letta サーバー上で動作している Agent の ID
-        faster_first_response: True
-        # 文章の分割方法：'regex' または 'pysbd'
-        segment_method: 'pysbd'
-        # Letta をエージェントとして選んだ場合、実際に動作する LLM は Letta 側で設定するため、
-        # ユーザー自身が Letta サーバーを起動する必要があります。
-        # 詳細については Letta の公式ドキュメントを参照してください。
 
-      hume_ai_agent:
-        api_key: ''
-        host: 'api.hume.ai' # 通常は変更不要
-        config_id: '' # 任意
-        idle_timeout: 15 # 切断までに待機する秒数
 
       # MemGPT 設定：MemGPT は現在一時的に削除されています
       ##
@@ -125,12 +107,6 @@ character_config:
         # プロバイダーがチャット履歴の任意の位置にシステムプロンプトを挿入できる場合は 'system' を使用してください。
         # それ以外の場合は 'user' を使用してください。通常はこの設定を変更する必要はありません。
 
-      # Claude API 設定
-      claude_llm:
-        base_url: 'https://api.anthropic.com'
-        llm_api_key: 'YOUR API KEY HERE'
-        model: 'claude-opus-4-8'
-        max_tokens: 1024 # 一回の応答で生成する最大トークン数
 
       llama_cpp_llm:
         model_path: '<path-to-gguf-model-file>'
@@ -142,6 +118,7 @@ character_config:
         temperature: 1.0 # 0 から 2 の間の値
         # 非アクティブ状態になってからモデルをメモリ内に保持する秒数。
         # -1 に設定すると、（open llm vtuber を終了した後も）モデルを永久にメモリ内に保持します
+        reasoning_effort: null # 'none' で推論モデルの思考を無効化（低遅延）; null = モデル既定
         keep_alive: -1
         unload_at_exit: True # 終了時にモデルをメモリから解放する
 
@@ -150,45 +127,17 @@ character_config:
         model: 'qwen2.5:latest'
         temperature: 1.0 # 0 から 2 の間の値
 
-      openai_llm:
-        llm_api_key: 'Your Open AI API key'
-        model: 'gpt-4o'
-        temperature: 1.0 # 0 から 2 の間の値
 
-      gemini_llm:
-        llm_api_key: 'Your Gemini API Key'
-        model: 'gemini-2.0-flash-exp'
-        temperature: 1.0 # 0 から 2 の間の値
 
-      zhipu_llm:
-        llm_api_key: 'Your ZhiPu AI API key'
-        model: 'glm-4-flash'
-        temperature: 1.0 # 0 から 2 の間の値
 
-      deepseek_llm:
-        llm_api_key: 'Your DeepSeek API key'
-        model: 'deepseek-chat'
-        temperature: 0.7 # DeepSeek の temperature は 0 から 1 の範囲であることに注意
 
-      mistral_llm:
-        llm_api_key: 'Your Mistral API key'
-        model: 'pixtral-large-latest'
-        temperature: 1.0 # 0 から 2 の間の値
 
-      groq_llm:
-        llm_api_key: 'your groq API key'
-        model: 'llama-3.3-70b-versatile'
-        temperature: 1.0 # 0 から 2 の間の値
 
   # === 自動音声認識（ASR） ===
   asr_config:
-    # 音声認識モデルの選択肢：'faster_whisper', 'whisper_cpp', 'whisper', 'azure_asr', 'fun_asr', 'groq_whisper_asr', 'sherpa_onnx_asr'
+    # 音声認識モデルの選択肢：'faster_whisper', 'whisper_cpp', 'whisper', 'fun_asr', 'sherpa_onnx_asr'
     asr_model: 'sherpa_onnx_asr'
 
-    azure_asr:
-      api_key: 'azure_api_key'
-      region: 'eastus'
-      languages: ['en-US', 'zh-CN'] # 検出する言語のリスト
 
     # Faster Whisper 設定
     faster_whisper:
@@ -275,36 +224,19 @@ character_config:
       # 推論に使用するプロバイダー（cpu または cuda）（cuda を使う場合は追加設定が必要です。ドキュメントを参照してください）
       provider: 'cpu'
 
-    groq_whisper_asr:
-      api_key: ''
-      model: 'whisper-large-v3-turbo' # または 'whisper-large-v3'
-      lang: '' # 空にすると自動検出になります
 
   # =================== 音声合成（TTS） ===================
   tts_config:
-    tts_model: 'edge_tts'
+    tts_model: 'sherpa_onnx_tts' # ローカル英語音声（日本語のローカル音声は同梱なし: melo_tts / gpt_sovits_tts を参照）
     # 音声合成モデルの選択肢：
-    #   'azure_tts', 'pyttsx3_tts', 'edge_tts', 'bark_tts',
+    #   'bark_tts',
     #   'cosyvoice_tts', 'melo_tts', 'coqui_tts', 'piper_tts',
-    #   'fish_api_tts', 'x_tts', 'gpt_sovits_tts', 'sherpa_onnx_tts'
-    #   'minimax_tts', 'elevenlabs_tts', 'cartesia_tts', 'kokoro_tts'
+    #   'x_tts', 'gpt_sovits_tts', 'sherpa_onnx_tts', 'openai_tts', 'spark_tts', 'kokoro_tts'
 
-    azure_tts:
-      api_key: 'azure-api-key'
-      region: 'eastus'
-      voice: 'en-US-AshleyNeural'
-      pitch: '26' # ピッチ調整のパーセンテージ
-      rate: '1' # 話速
 
     bark_tts:
       voice: 'v2/en_speaker_1'
 
-    edge_tts:
-      # ドキュメントはこちら：https://github.com/rany2/edge-tts
-      # `edge-tts --list-voices` で利用可能な音声を一覧表示できます
-      voice: 'en-US-AvaMultilingualNeural' # 'en-US-AvaMultilingualNeural' #'zh-CN-XiaoxiaoNeural' # 'ja-JP-NanamiNeural'
-
-    # pyttsx3_tts に設定項目はありません。
 
     piper_tts:
       model_path: 'models/piper/zh_CN-huayan-medium.onnx'  # モデルファイル（.onnx）へのパス
@@ -376,14 +308,6 @@ character_config:
       media_type: 'wav'
       streaming_mode: 'false'
 
-    fish_api_tts:
-      # Fish TTS API の API キー。
-      api_key: ''
-      # 使用する音声の参照 ID。[Fish Audio のウェブサイト](https://fish.audio/) で取得できます。
-      reference_id: ''
-      # 'normal' または 'balanced'。balanced の方が高速ですが品質は下がります。
-      latency: 'balanced'
-      base_url: 'https://api.fish.audio'
 
     coqui_tts:
       # 使用する TTS モデルの名前。空の場合はデフォルトモデルを使用します
@@ -398,30 +322,21 @@ character_config:
       language: 'en'
       device: ''
 
-    siliconflow_tts:
-      api_url: "https://api.siliconflow.cn/v1/audio/speech"
-      api_key: "your key"
-      default_model: "FunAudioLLM/CosyVoice2-0.5B"
-      default_voice: "speech:Dreamflowers:5bdstvc39i:xkqldnpasqmoqbakubom your voice name"  # デフォルトの音声設定。形式："speech:モデル名:音声ID:あなたの音声名"
-      sample_rate: 32000  # 出力サンプルレートの制御。出力フォーマットごとにデフォルト値と対応範囲が異なります：opus は 48000Hz に対応。wav、pcm は 8000、16000、24000、32000、44100Hz に対応（デフォルト 44100Hz）。mp3 は 32000、44100Hz に対応（デフォルト 44100Hz）。
-      response_format: "mp3" # 出力する音声フォーマット。対応形式は mp3、opus、wav、pcm
-      stream: true
-      speed: 1
-      gain: 0
 
     # pip install sherpa-onnx
     # ドキュメント：https://k2-fsa.github.io/sherpa/onnx/index.html
     # TTS モデルのダウンロード：https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
     # さらに多くの例は config_alts を参照してください
     sherpa_onnx_tts:
-      vits_model: '/path/to/tts-models/vits-melo-tts-zh_en/model.onnx' # VITS モデルファイルへのパス
-      vits_lexicon: '/path/to/tts-models/vits-melo-tts-zh_en/lexicon.txt' # 辞書ファイルへのパス（任意）
-      vits_tokens: '/path/to/tts-models/vits-melo-tts-zh_en/tokens.txt' # tokens ファイルへのパス
-      vits_data_dir: '' # '/path/to/tts-models/vits-piper-en_GB-cori-high/espeak-ng-data'  # espeak-ng データへのパス（任意）
-      vits_dict_dir: '/path/to/tts-models/vits-melo-tts-zh_en/dict' # Jieba 辞書へのパス（任意、中国語向け）
-      tts_rule_fsts: '/path/to/tts-models/vits-melo-tts-zh_en/number.fst,/path/to/tts-models/vits-melo-tts-zh_en/phone.fst,/path/to/tts-models/vits-melo-tts-zh_en/date.fst,/path/to/tts-models/vits-melo-tts-zh_en/new_heteronym.fst' # ルール FST ファイルへのパス（任意）
+      # ./models/<archive>/... paths are downloaded automatically on first start.
+      vits_model: './models/vits-piper-en_US-lessac-medium/en_US-lessac-medium.onnx' # VITS モデルファイルへのパス
+      vits_lexicon: '' # 辞書ファイルへのパス（任意）
+      vits_tokens: './models/vits-piper-en_US-lessac-medium/tokens.txt' # tokens ファイルへのパス
+      vits_data_dir: './models/vits-piper-en_US-lessac-medium/espeak-ng-data' # espeak-ng データへのパス（任意）
+      vits_dict_dir: '' # Jieba 辞書へのパス（任意、中国語向け）
+      tts_rule_fsts: '' # ルール FST ファイルへのパス（任意）
       max_num_sentences: 2 # 1バッチあたりの最大文数（-1 で全て）
-      sid: 1 # 話者 ID（複数話者モデル用）
+      sid: 0 # 話者 ID（複数話者モデル用）
       provider: 'cpu' # 'cpu'、'cuda'（GPU）、または 'coreml'（Apple）を使用
       num_threads: 1 # 計算スレッド数
       speed: 1.0 # 話速（1.0 が通常）
@@ -443,36 +358,8 @@ character_config:
       base_url: 'http://localhost:8880/v1' # TTS サーバーのベース URL
       file_extension: 'mp3' # 音声ファイル形式（'mp3' または 'wav'）
 
-    # 詳細は以下を参照：https://platform.minimaxi.com/document/Announcement
-    minimax_tts:
-      group_id: '' # あなたの minimax group_id
-      api_key: '' # あなたの minimax api_key
-      # サポートされているモデル：'speech-02-hd'、'speech-02-turbo'（'speech-02-turbo' を推奨）
-      model: 'speech-02-turbo' # minimax モデル名
-      voice_id: 'female-shaonv' # minimax の音声 ID、デフォルトは 'female-shaonv'
-      # カスタム発音辞書、デフォルトは空。
-      # 例：'{"tone": ["word_needing_pronunciation_fix/(pinyin_or_phonetic)", "another_word/replacement"]}'
-      pronunciation_dict: ''
 
-    elevenlabs_tts:
-      api_key: ''
-      voice_id: '' # ElevenLabs の音声 ID
-      model_id: 'eleven_multilingual_v2' # モデル ID（例：eleven_multilingual_v2）
-      output_format: 'mp3_44100_128' # 出力音声フォーマット（例：mp3_44100_128）
-      stability: 0.5 # 音声の安定性（0.0～1.0）
-      similarity_boost: 0.5 # 音声の類似度ブースト（0.0～1.0）
-      style: 0.0 # 音声スタイルの誇張度（0.0～1.0）
-      use_speaker_boost: true # 品質向上のためのスピーカーブーストを有効化
 
-    cartesia_tts:
-      api_key: ''
-      voice_id: '' # Cartesia の音声 ID
-      model_id: 'sonic-3' # モデル ID（例：sonic-3）
-      output_format: 'wav' # 出力音声フォーマット（例：wav）
-      language: 'en' # 音声の出力言語（例：en）
-      emotion: 'neutral' # 感情の指定
-      volume: 1.0 # 音声音量（0.5～2.0）
-      speed: 1.0 # 音声速度（0.6～1.5）
 
   # =================== 音声区間検出（VAD） ===================
   vad_config:
@@ -499,26 +386,8 @@ character_config:
     translator_config:
       # 例えば…あなたが話して字幕を英語で読み、TTS が日本語で話す、といったことができます
       translate_audio: False # 警告：使用するには DeepLX をデプロイする必要があります。そうしないとクラッシュします
-      translate_provider: 'deeplx' # deeplx または tencent
+      translate_provider: 'deeplx' # self-hosted DeepLX
 
       deeplx:
         deeplx_target_lang: 'JA'
         deeplx_api_endpoint: 'http://localhost:1188/v2/translate'
-
-      #  Tencent テキスト翻訳　月間500万文字まで無料　後払いは忘れずにオフにしてください。機械翻訳コンソール > システム設定 から手動で無効化する必要があります
-      #   https://cloud.tencent.com/document/product/551/35017
-      #   https://console.cloud.tencent.com/cam/capi
-      tencent:
-        secret_id: ''
-        secret_key: ''
-        region: 'ap-guangzhou'
-        source_lang: 'zh'
-        target_lang: 'ja'
-
-# ライブ配信連携
-live_config:
-  bilibili_live:
-    # 監視対象の BiliBili ライブ配信ルーム ID のリスト
-    room_ids: [1991478060]
-    # SESSDATA クッキーの値（任意、認証付きリクエスト用）
-    sessdata: ""

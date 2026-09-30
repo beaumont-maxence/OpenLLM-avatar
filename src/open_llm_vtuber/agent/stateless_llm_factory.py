@@ -8,7 +8,6 @@ from .stateless_llm.stateless_llm_with_template import (
 )
 from .stateless_llm.openai_compatible_llm import AsyncLLM as OpenAICompatibleLLM
 from .stateless_llm.ollama_llm import OllamaLLM
-from .stateless_llm.claude_llm import AsyncLLM as ClaudeLLM
 
 
 class LLMFactory:
@@ -22,16 +21,7 @@ class LLMFactory:
         """
         logger.info(f"Initializing LLM: {llm_provider}")
 
-        if (
-            llm_provider == "openai_compatible_llm"
-            or llm_provider == "openai_llm"
-            or llm_provider == "gemini_llm"
-            or llm_provider == "zhipu_llm"
-            or llm_provider == "deepseek_llm"
-            or llm_provider == "groq_llm"
-            or llm_provider == "mistral_llm"
-            or llm_provider == "lmstudio_llm"
-        ):
+        if llm_provider in ("openai_compatible_llm", "lmstudio_llm"):
             return OpenAICompatibleLLM(
                 model=kwargs.get("model"),
                 base_url=kwargs.get("base_url"),
@@ -59,6 +49,7 @@ class LLMFactory:
                 temperature=kwargs.get("temperature"),
                 keep_alive=kwargs.get("keep_alive"),
                 unload_at_exit=kwargs.get("unload_at_exit"),
+                reasoning_effort=kwargs.get("reasoning_effort"),
             )
 
         elif llm_provider == "llama_cpp_llm":
@@ -66,13 +57,6 @@ class LLMFactory:
 
             return LlamaLLM(
                 model_path=kwargs.get("model_path"),
-            )
-        elif llm_provider == "claude_llm":
-            return ClaudeLLM(
-                system=kwargs.get("system_prompt"),
-                base_url=kwargs.get("base_url"),
-                model=kwargs.get("model"),
-                llm_api_key=kwargs.get("llm_api_key"),
             )
         else:
             raise ValueError(f"Unsupported LLM provider: {llm_provider}")

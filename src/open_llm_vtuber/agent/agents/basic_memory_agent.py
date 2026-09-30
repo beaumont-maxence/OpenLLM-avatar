@@ -12,7 +12,6 @@ from loguru import logger
 from .agent_interface import AgentInterface
 from ..output_types import SentenceOutput, DisplayText
 from ..stateless_llm.stateless_llm_interface import StatelessLLMInterface
-from ..stateless_llm.claude_llm import AsyncLLM as ClaudeAsyncLLM
 from ..stateless_llm.openai_compatible_llm import AsyncLLM as OpenAICompatibleAsyncLLM
 from ...chat_history_manager import get_history
 from ..transformers import (
@@ -23,7 +22,6 @@ from ..transformers import (
 )
 from ...config_manager import TTSPreprocessorConfig
 from ..input_types import BatchInput, TextSource
-from prompts import prompt_loader
 from ...mcpp.tool_manager import ToolManager
 from ...mcpp.json_detector import StreamJSONDetector
 from ...mcpp.types import ToolCallObject
@@ -69,16 +67,12 @@ class BasicMemoryAgent(AgentInterface):
         self._json_detector = StreamJSONDetector()
 
         self._formatted_tools_openai = []
-        self._formatted_tools_claude = []
         if self._tool_manager:
             self._formatted_tools_openai = self._tool_manager.get_formatted_tools(
                 "OpenAI"
             )
-            self._formatted_tools_claude = self._tool_manager.get_formatted_tools(
-                "Claude"
-            )
             logger.debug(
-                f"Agent received pre-formatted tools - OpenAI: {len(self._formatted_tools_openai)}, Claude: {len(self._formatted_tools_claude)}"
+                f"Agent received pre-formatted tools - OpenAI: {len(self._formatted_tools_openai)}"
             )
         else:
             logger.debug(
@@ -287,119 +281,6 @@ class BasicMemoryAgent(AgentInterface):
 
         return messages
 
-    async def _claude_tool_interaction_loop(
-        self,
-        initial_messages: List[Dict[str, Any]],
-        tools: List[Dict[str, Any]],
-    ) -> AsyncIterator[Union[str, Dict[str, Any]]]:
-        """Handle Claude interaction loop with tool support."""
-        messages = initial_messages.copy()
-        current_turn_text = ""
-        pending_tool_calls = []
-        current_assistant_message_content = []
-
-        while True:
-            stream = self._llm.chat_completion(messages, self._system, tools=tools)
-            pending_tool_calls.clear()
-            current_assistant_message_content.clear()
-
-            async for event in stream:
-                if event["type"] == "text_delta":
-                    text = event["text"]
-                    current_turn_text += text
-                    yield text
-                    if (
-                        not current_assistant_message_content
-                        or current_assistant_message_content[-1]["type"] != "text"
-                    ):
-                        current_assistant_message_content.append(
-                            {"type": "text", "text": text}
-                        )
-                    else:
-                        current_assistant_message_content[-1]["text"] += text
-                elif event["type"] == "tool_use_complete":
-                    tool_call_data = event["data"]
-                    logger.info(
-                        f"Tool request: {tool_call_data['name']} (ID: {tool_call_data['id']})"
-                    )
-                    pending_tool_calls.append(tool_call_data)
-                    current_assistant_message_content.append(
-                        {
-                            "type": "tool_use",
-                            "id": tool_call_data["id"],
-                            "name": tool_call_data["name"],
-                            "input": tool_call_data["input"],
-                        }
-                    )
-                # elif event["type"] == "message_delta":
-                #     if event["data"]["delta"].get("stop_reason"):
-                #         stop_reason = event["data"]["delta"].get("stop_reason")
-                elif event["type"] == "message_stop":
-                    break
-                elif event["type"] == "error":
-                    logger.error(f"LLM API Error: {event['message']}")
-                    yield f"[Error from LLM: {event['message']}]"
-                    return
-
-            if pending_tool_calls:
-                filtered_assistant_content = [
-                    block
-                    for block in current_assistant_message_content
-                    if not (
-                        block.get("type") == "text"
-                        and not block.get("text", "").strip()
-                    )
-                ]
-
-                if filtered_assistant_content:
-                    messages.append(
-                        {"role": "assistant", "content": filtered_assistant_content}
-                    )
-                    assistant_text_for_memory = "".join(
-                        [
-                            c["text"]
-                            for c in filtered_assistant_content
-                            if c["type"] == "text"
-                        ]
-                    ).strip()
-                    if assistant_text_for_memory:
-                        self._add_message(assistant_text_for_memory, "assistant")
-
-                tool_results_for_llm = []
-                if not self._tool_executor:
-                    logger.error(
-                        "Claude Tool interaction requested but ToolExecutor is not available."
-                    )
-                    yield "[Error: ToolExecutor not configured]"
-                    return
-
-                tool_executor_iterator = self._tool_executor.execute_tools(
-                    tool_calls=pending_tool_calls,
-                    caller_mode="Claude",
-                )
-                try:
-                    while True:
-                        update = await anext(tool_executor_iterator)
-                        if update.get("type") == "final_tool_results":
-                            tool_results_for_llm = update.get("results", [])
-                            break
-                        else:
-                            yield update
-                except StopAsyncIteration:
-                    logger.warning(
-                        "Tool executor finished without final results marker."
-                    )
-
-                if tool_results_for_llm:
-                    messages.append({"role": "user", "content": tool_results_for_llm})
-
-                # stop_reason = None
-                continue
-            else:
-                if current_turn_text:
-                    self._add_message(current_turn_text, "assistant")
-                return
-
     async def _openai_tool_interaction_loop(
         self,
         initial_messages: List[Dict[str, Any]],
@@ -605,11 +486,7 @@ class BasicMemoryAgent(AgentInterface):
 
             if self._use_mcpp and self._tool_manager:
                 tools = None
-                if isinstance(self._llm, ClaudeAsyncLLM):
-                    tool_mode = "Claude"
-                    tools = self._formatted_tools_claude
-                    llm_supports_native_tools = True
-                elif isinstance(self._llm, OpenAICompatibleAsyncLLM):
+                if isinstance(self._llm, OpenAICompatibleAsyncLLM):
                     tool_mode = "OpenAI"
                     tools = self._formatted_tools_openai
                     llm_supports_native_tools = True
@@ -623,16 +500,7 @@ class BasicMemoryAgent(AgentInterface):
                         f"No tools available/formatted for '{tool_mode}' mode, despite MCP being enabled."
                     )
 
-            if self._use_mcpp and tool_mode == "Claude":
-                logger.debug(
-                    f"Starting Claude tool interaction loop with {len(tools)} tools."
-                )
-                async for output in self._claude_tool_interaction_loop(
-                    messages, tools if tools else []
-                ):
-                    yield output
-                return
-            elif self._use_mcpp and tool_mode == "OpenAI":
+            if self._use_mcpp and tool_mode == "OpenAI":
                 logger.debug(
                     f"Starting OpenAI tool interaction loop with {len(tools)} tools."
                 )
@@ -673,30 +541,3 @@ class BasicMemoryAgent(AgentInterface):
     def reset_interrupt(self) -> None:
         """Reset interrupt flag."""
         self._interrupt_handled = False
-
-    def start_group_conversation(
-        self, human_name: str, ai_participants: List[str]
-    ) -> None:
-        """Start a group conversation."""
-        if not self._tool_prompts:
-            logger.warning("Tool prompts dictionary is not set.")
-            return
-
-        other_ais = ", ".join(name for name in ai_participants)
-        prompt_name = self._tool_prompts.get("group_conversation_prompt", "")
-
-        if not prompt_name:
-            logger.warning("No group conversation prompt name found.")
-            return
-
-        try:
-            group_context = prompt_loader.load_util(prompt_name).format(
-                human_name=human_name, other_ais=other_ais
-            )
-            self._memory.append({"role": "user", "content": group_context})
-        except FileNotFoundError:
-            logger.error(f"Group conversation prompt file not found: {prompt_name}")
-        except KeyError as e:
-            logger.error(f"Missing formatting key in group conversation prompt: {e}")
-        except Exception as e:
-            logger.error(f"Failed to load group conversation prompt: {e}")

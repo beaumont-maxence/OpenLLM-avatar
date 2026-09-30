@@ -9,33 +9,26 @@ and utility functions for loading/saving configurations.
 from .main import Config
 from .system import SystemConfig
 from .character import CharacterConfig
-from .live import LiveConfig, BiliBiliLiveConfig
 from .stateless_llm import (
     OpenAICompatibleConfig,
-    ClaudeConfig,
     LlamaCppConfig,
 )
 from .asr import (
     ASRConfig,
-    AzureASRConfig,
     FasterWhisperConfig,
     WhisperCPPConfig,
     WhisperConfig,
     FunASRConfig,
     SherpaOnnxASRConfig,
-    GroqWhisperASRConfig,
 )
 from .tts import (
     TTSConfig,
-    AzureTTSConfig,
     BarkTTSConfig,
-    EdgeTTSConfig,
     CosyvoiceTTSConfig,
     MeloTTSConfig,
     CoquiTTSConfig,
     XTTSConfig,
     GPTSoVITSConfig,
-    FishAPITTSConfig,
     SherpaOnnxTTSConfig,
 )
 from .vad import (
@@ -65,11 +58,8 @@ __all__ = [
     "Config",
     "SystemConfig",
     "CharacterConfig",
-    "LiveConfig",
-    "BiliBiliLiveConfig",
     # LLM related classes
     "OpenAICompatibleConfig",
-    "ClaudeConfig",
     "LlamaCppConfig",
     # Agent related classes
     "AgentConfig",
@@ -78,24 +68,19 @@ __all__ = [
     "BasicMemoryAgentConfig",
     # ASR related classes
     "ASRConfig",
-    "AzureASRConfig",
     "FasterWhisperConfig",
     "WhisperCPPConfig",
     "WhisperConfig",
     "FunASRConfig",
     "SherpaOnnxASRConfig",
-    "GroqWhisperASRConfig",
     # TTS related classes
     "TTSConfig",
-    "AzureTTSConfig",
     "BarkTTSConfig",
-    "EdgeTTSConfig",
     "CosyvoiceTTSConfig",
     "MeloTTSConfig",
     "CoquiTTSConfig",
     "XTTSConfig",
     "GPTSoVITSConfig",
-    "FishAPITTSConfig",
     "SherpaOnnxTTSConfig",
     # VAD related classes
     "VADConfig",

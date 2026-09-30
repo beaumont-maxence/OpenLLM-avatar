@@ -34,8 +34,12 @@ class OpenAICompatibleConfig(StatelessLLMBaseConfig):
     temperature: float = Field(1.0, alias="temperature")
 
     _OPENAI_COMPATIBLE_DESCRIPTIONS: ClassVar[dict[str, Description]] = {
-        "base_url": Description(en="Base URL for the API endpoint", ja="APIエンドポイントのベースURL"),
-        "llm_api_key": Description(en="API key for authentication", ja="認証用のAPIキー"),
+        "base_url": Description(
+            en="Base URL for the API endpoint", ja="APIエンドポイントのベースURL"
+        ),
+        "llm_api_key": Description(
+            en="API key for authentication", ja="認証用のAPIキー"
+        ),
         "organization_id": Description(
             en="Organization ID for the API (Optional)",
             ja="APIの組織ID（任意）",
@@ -44,7 +48,9 @@ class OpenAICompatibleConfig(StatelessLLMBaseConfig):
             en="Project ID for the API (Optional)",
             ja="APIのプロジェクトID（任意）",
         ),
-        "model": Description(en="Name of the LLM model to use", ja="使用するLLMモデルの名前"),
+        "model": Description(
+            en="Name of the LLM model to use", ja="使用するLLMモデルの名前"
+        ),
         "temperature": Description(
             en="What sampling temperature to use, between 0 and 2.",
             ja="使用するサンプリング温度（0から2の間）。",
@@ -85,6 +91,9 @@ class OllamaConfig(OpenAICompatibleConfig):
     llm_api_key: str = Field("default_api_key", alias="llm_api_key")
     keep_alive: float = Field(-1, alias="keep_alive")
     unload_at_exit: bool = Field(True, alias="unload_at_exit")
+    reasoning_effort: Literal["none", "low", "medium", "high"] | None = Field(
+        None, alias="reasoning_effort"
+    )
     interrupt_method: Literal["system", "user"] = Field(
         "system", alias="interrupt_method"
     )
@@ -104,6 +113,10 @@ class OllamaConfig(OpenAICompatibleConfig):
             en="Unload the model when the program exits.",
             ja="プログラム終了時にモデルをアンロードします。",
         ),
+        "reasoning_effort": Description(
+            en="Thinking effort for reasoning models. 'none' disables thinking for the lowest latency. Leave empty to use the model default.",
+            ja="推論モデルの思考量。'none' で思考を無効化し遅延を最小化します。空欄ならモデルの既定値。",
+        ),
     }
 
     DESCRIPTIONS: ClassVar[dict[str, Description]] = {
@@ -120,94 +133,6 @@ class LmStudioConfig(OpenAICompatibleConfig):
     interrupt_method: Literal["system", "user"] = Field(
         "system", alias="interrupt_method"
     )
-
-
-class OpenAIConfig(OpenAICompatibleConfig):
-    """Configuration for Official OpenAI API."""
-
-    base_url: str = Field("https://api.openai.com/v1", alias="base_url")
-    interrupt_method: Literal["system", "user"] = Field(
-        "system", alias="interrupt_method"
-    )
-
-
-class GeminiConfig(OpenAICompatibleConfig):
-    """Configuration for Gemini API."""
-
-    base_url: str = Field(
-        "https://generativelanguage.googleapis.com/v1beta/openai/", alias="base_url"
-    )
-    interrupt_method: Literal["system", "user"] = Field(
-        "user", alias="interrupt_method"
-    )
-
-
-class MistralConfig(OpenAICompatibleConfig):
-    """Configuration for Mistral API."""
-
-    base_url: str = Field("https://api.mistral.ai/v1", alias="base_url")
-    interrupt_method: Literal["system", "user"] = Field(
-        "user", alias="interrupt_method"
-    )
-
-
-class ZhipuConfig(OpenAICompatibleConfig):
-    """Configuration for Zhipu API."""
-
-    base_url: str = Field("https://open.bigmodel.cn/api/paas/v4/", alias="base_url")
-
-
-class DeepseekConfig(OpenAICompatibleConfig):
-    """Configuration for Deepseek API."""
-
-    base_url: str = Field("https://api.deepseek.com/v1", alias="base_url")
-
-
-class GroqConfig(OpenAICompatibleConfig):
-    """Configuration for Groq API."""
-
-    base_url: str = Field("https://api.groq.com/openai/v1", alias="base_url")
-    interrupt_method: Literal["system", "user"] = Field(
-        "system", alias="interrupt_method"
-    )
-
-
-class ClaudeConfig(StatelessLLMBaseConfig):
-    """Configuration for OpenAI Official API."""
-
-    base_url: str = Field("https://api.anthropic.com", alias="base_url")
-    llm_api_key: str = Field(..., alias="llm_api_key")
-    model: str = Field(..., alias="model")
-    max_tokens: int = Field(1024, alias="max_tokens")
-    temperature: float = Field(1.0, alias="temperature")
-    interrupt_method: Literal["system", "user"] = Field(
-        "user", alias="interrupt_method"
-    )
-
-    _CLAUDE_DESCRIPTIONS: ClassVar[dict[str, Description]] = {
-        "base_url": Description(
-            en="Base URL for Claude API",
-            ja="Claude APIのベースURL",
-        ),
-        "llm_api_key": Description(en="API key for authentication", ja="認証用のAPIキー"),
-        "model": Description(
-            en="Name of the Claude model to use",
-            ja="使用するClaudeモデルの名前",
-        ),
-        "max_tokens": Description(
-            en="Maximum number of tokens to generate per response (default: 1024)",
-            ja="1回の応答で生成する最大トークン数（デフォルト: 1024）",
-        ),
-        "temperature": Description(
-            en="What sampling temperature to use, between 0 and 1.",
-            ja="使用するサンプリング温度（0から1の間）。",
-        ),
-    }
-
-    DESCRIPTIONS: ClassVar[dict[str, Description]] = {
-        **StatelessLLMBaseConfig.DESCRIPTIONS,
-        **_CLAUDE_DESCRIPTIONS,
-    }
 
 
 class LlamaCppConfig(StatelessLLMBaseConfig):
@@ -243,14 +168,7 @@ class StatelessLLMConfigs(I18nMixin, BaseModel):
     )
     ollama_llm: OllamaConfig | None = Field(None, alias="ollama_llm")
     lmstudio_llm: LmStudioConfig | None = Field(None, alias="lmstudio_llm")
-    openai_llm: OpenAIConfig | None = Field(None, alias="openai_llm")
-    gemini_llm: GeminiConfig | None = Field(None, alias="gemini_llm")
-    zhipu_llm: ZhipuConfig | None = Field(None, alias="zhipu_llm")
-    deepseek_llm: DeepseekConfig | None = Field(None, alias="deepseek_llm")
-    groq_llm: GroqConfig | None = Field(None, alias="groq_llm")
-    claude_llm: ClaudeConfig | None = Field(None, alias="claude_llm")
     llama_cpp_llm: LlamaCppConfig | None = Field(None, alias="llama_cpp_llm")
-    mistral_llm: MistralConfig | None = Field(None, alias="mistral_llm")
 
     DESCRIPTIONS: ClassVar[dict[str, Description]] = {
         "stateless_llm_with_template": Description(
@@ -265,28 +183,6 @@ class StatelessLLMConfigs(I18nMixin, BaseModel):
         "lmstudio_llm": Description(
             en="Configuration for LM Studio",
             ja="LM Studioの設定",
-        ),
-        "openai_llm": Description(
-            en="Configuration for Official OpenAI API",
-            ja="OpenAI公式APIの設定",
-        ),
-        "gemini_llm": Description(
-            en="Configuration for Gemini API",
-            ja="Gemini APIの設定",
-        ),
-        "mistral_llm": Description(
-            en="Configuration for Mistral API",
-            ja="Mistral APIの設定",
-        ),
-        "zhipu_llm": Description(en="Configuration for Zhipu API", ja="Zhipu APIの設定"),
-        "deepseek_llm": Description(
-            en="Configuration for Deepseek API",
-            ja="Deepseek APIの設定",
-        ),
-        "groq_llm": Description(en="Configuration for Groq API", ja="Groq APIの設定"),
-        "claude_llm": Description(
-            en="Configuration for Claude API",
-            ja="Claude APIの設定",
         ),
         "llama_cpp_llm": Description(
             en="Configuration for local Llama.cpp",

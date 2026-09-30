@@ -5,6 +5,7 @@ import sherpa_onnx
 import soundfile as sf
 from loguru import logger
 from .tts_interface import TTSInterface
+from ..asr.utils import download_and_extract, check_and_extract_local_file
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
@@ -51,6 +52,16 @@ class TTSEngine(TTSInterface):
         """
         Initialize the sherpa-onnx TTS engine.
         """
+        # Auto-download official sherpa-onnx TTS models referenced as ./models/<archive>/...
+        # (same approach as the SenseVoice ASR model). Other paths must exist already.
+        prefix = "./models/"
+        if not os.path.isfile(self.vits_model) and self.vits_model.startswith(prefix):
+            archive = self.vits_model[len(prefix) :].split("/")[0]
+            url = f"https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/{archive}.tar.bz2"
+            logger.warning(f"TTS model not found. Downloading {archive}...")
+            if check_and_extract_local_file(url, "./models") is None:
+                download_and_extract(url, "./models")
+
         # Construct the configuration for the TTS engine
         tts_config = sherpa_onnx.OfflineTtsConfig(
             model=sherpa_onnx.OfflineTtsModelConfig(

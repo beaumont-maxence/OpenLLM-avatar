@@ -30,6 +30,7 @@ class AsyncLLM(StatelessLLMInterface):
         organization_id: str = "z",
         project_id: str = "z",
         temperature: float = 1.0,
+        reasoning_effort: str | None = None,
     ):
         """
         Initializes an instance of the `AsyncLLM` class.
@@ -41,10 +42,12 @@ class AsyncLLM(StatelessLLMInterface):
         - project_id (str, optional): The project ID for the OpenAI API. Defaults to "z".
         - llm_api_key (str, optional): The API key for the OpenAI API. Defaults to "z".
         - temperature (float, optional): What sampling temperature to use, between 0 and 2. Defaults to 1.0.
+        - reasoning_effort (str, optional): Thinking effort for reasoning models ("none" disables it). Not sent if None.
         """
         self.base_url = base_url
         self.model = model
         self.temperature = temperature
+        self.reasoning_effort = reasoning_effort
         self.client = AsyncOpenAI(
             base_url=base_url,
             organization=organization_id,
@@ -104,6 +107,7 @@ class AsyncLLM(StatelessLLMInterface):
                 model=self.model,
                 stream=True,
                 temperature=self.temperature,
+                reasoning_effort=self.reasoning_effort or NOT_GIVEN,
                 tools=available_tools,
             )
             logger.debug(

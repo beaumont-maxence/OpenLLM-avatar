@@ -1,9 +1,21 @@
 import os
+import shutil
+import tempfile
 import requests
 import tarfile
 from pathlib import Path
 from tqdm import tqdm
 from loguru import logger
+
+
+def _extract_tar_bz2(archive: Path, output_dir: str) -> None:
+    """Extract into a temp dir and move into place, so an interrupted run never
+    leaves a half-extracted model directory that looks complete."""
+    with tempfile.TemporaryDirectory(dir=output_dir) as tmp:
+        with tarfile.open(archive, "r:bz2") as tar:
+            tar.extractall(path=tmp, filter="data")  # blocks path traversal
+        for entry in os.listdir(tmp):
+            shutil.move(os.path.join(tmp, entry), os.path.join(output_dir, entry))
 
 
 def get_github_asset_url(owner, repo, release_tag, filename_without_ext):
@@ -80,13 +92,15 @@ def download_and_extract(url: str, output_dir: str) -> Path:
 
     # Download the file
     logger.info(f"🏃‍♂️Downloading {url} to {file_path}...")
-    response = requests.get(url, stream=True)
+    response = requests.get(url, stream=True, timeout=60)
     response.raise_for_status()  # Raise an error for bad status codes
     total_size = int(response.headers.get("content-length", 0))
     logger.debug(f"Total file size: {total_size / 1024 / 1024:.2f} MB")
 
+    # Write to .part and rename when done, so a truncated download is never reused.
+    part_path = file_path + ".part"
     with (
-        open(file_path, "wb") as f,
+        open(part_path, "wb") as f,
         tqdm(
             desc=file_name,
             total=total_size,
@@ -98,14 +112,14 @@ def download_and_extract(url: str, output_dir: str) -> Path:
         for chunk in response.iter_content(chunk_size=8192):
             size = f.write(chunk)
             pbar.update(size)
+    os.replace(part_path, file_path)
 
     logger.info(f"Downloaded {file_name} successfully.")
 
     # Extract the tar.bz2 file
     if file_name.endswith(".tar.bz2"):
         logger.info(f"Extracting {file_name}...")
-        with tarfile.open(file_path, "r:bz2") as tar:
-            tar.extractall(path=output_dir)
+        _extract_tar_bz2(file_path, output_dir)
         logger.info("Extraction completed.")
 
         # Delete the compressed file
@@ -148,13 +162,15 @@ def check_and_extract_local_file(url: str, output_dir: str) -> Path | None:
 
         try:
             logger.info("⏳ Extracting archive file...")
-            with tarfile.open(compressed_path, "r:bz2") as tar:
-                tar.extractall(path=output_dir)
+            _extract_tar_bz2(compressed_path, output_dir)
             logger.success(f"Extracted archive to the path: {extracted_dir}")
             os.remove(compressed_path)  # Remove the compressed file
             return extracted_dir
         except Exception as e:
-            logger.error(f"Fail to extract file: {str(e)}")
+            logger.error(
+                f"Fail to extract file: {str(e)}. Removing the corrupt archive."
+            )
+            os.remove(compressed_path)
             return None
 
     logger.warning(f"Local file not found or not a tar.bz2 archive: {compressed_path}")

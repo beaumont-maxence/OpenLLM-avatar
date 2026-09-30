@@ -38,22 +38,6 @@ class ASRFactory:
                 use_itn=kwargs.get("use_itn"),
                 # sample_rate=kwargs.get("sample_rate"),
             )
-        elif system_name == "azure_asr":
-            from .azure_asr import VoiceRecognition as AzureASR
-
-            return AzureASR(
-                subscription_key=kwargs.get("api_key"),
-                region=kwargs.get("region"),
-                languages=kwargs.get("languages", ["en-US", "zh-CN"]),
-            )
-        elif system_name == "groq_whisper_asr":
-            from .groq_whisper_asr import VoiceRecognition as GroqWhisperASR
-
-            return GroqWhisperASR(
-                api_key=kwargs.get("api_key"),
-                model=kwargs.get("model"),
-                lang=kwargs.get("lang"),
-            )
         elif system_name == "sherpa_onnx_asr":
             from .sherpa_onnx_asr import VoiceRecognition as SherpaOnnxASR
 

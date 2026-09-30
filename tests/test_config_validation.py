@@ -2,21 +2,21 @@ import pytest
 from pydantic import ValidationError
 
 from src.open_llm_vtuber.config_manager.asr import ASRConfig, FasterWhisperConfig
-from src.open_llm_vtuber.config_manager.tts import EdgeTTSConfig, TTSConfig
+from src.open_llm_vtuber.config_manager.tts import BarkTTSConfig, TTSConfig
 from src.open_llm_vtuber.config_manager.utils import read_yaml, validate_config
 
 
 def test_tts_config_requires_selected_model_block():
-    with pytest.raises(ValidationError, match="edge_tts"):
-        TTSConfig(tts_model="edge_tts")
+    with pytest.raises(ValidationError, match="bark_tts"):
+        TTSConfig(tts_model="bark_tts")
 
 
 def test_tts_config_accepts_selected_model_with_block():
     config = TTSConfig(
-        tts_model="edge_tts",
-        edge_tts=EdgeTTSConfig(voice="en-US-AvaMultilingualNeural"),
+        tts_model="bark_tts",
+        bark_tts=BarkTTSConfig(voice="v2/en_speaker_1"),
     )
-    assert config.tts_model == "edge_tts"
+    assert config.tts_model == "bark_tts"
 
 
 def test_asr_config_requires_selected_model_block():

@@ -10,7 +10,6 @@ class ToolManager:
     def __init__(
         self,
         formatted_tools_openai: List[Dict[str, Any]] = None,
-        formatted_tools_claude: List[Dict[str, Any]] = None,
         initial_tools_dict: Dict[str, FormattedTool] = None,
     ) -> None:
         """Initialize the Tool Manager with pre-formatted tool lists."""
@@ -21,12 +20,9 @@ class ToolManager:
         self._formatted_tools_openai: List[Dict[str, Any]] = (
             formatted_tools_openai or []
         )
-        self._formatted_tools_claude: List[Dict[str, Any]] = (
-            formatted_tools_claude or []
-        )
 
         logger.info(
-            f"ToolManager initialized with {len(self._formatted_tools_openai)} OpenAI tools and {len(self._formatted_tools_claude)} Claude tools."
+            f"ToolManager initialized with {len(self._formatted_tools_openai)} OpenAI tools."
         )
 
     def get_tool(self, tool_name: str) -> FormattedTool | None:
@@ -40,11 +36,9 @@ class ToolManager:
         return None
 
     def get_formatted_tools(
-        self, mode: Literal["OpenAI", "Claude"]
+        self, mode: Literal["OpenAI"]
     ) -> List[Dict[str, Any]] | Any:
         """Get the pre-formatted list of tools for the specified API mode."""
 
         if mode == "OpenAI":
             return self._formatted_tools_openai
-        elif mode == "Claude":
-            return self._formatted_tools_claude

@@ -15,6 +15,7 @@ class OllamaLLM(AsyncLLM):
         temperature: float = 1.0,
         keep_alive: float = -1,
         unload_at_exit: bool = True,
+        reasoning_effort: str | None = None,
     ):
         self.keep_alive = keep_alive
         self.unload_at_exit = unload_at_exit
@@ -26,6 +27,7 @@ class OllamaLLM(AsyncLLM):
             organization_id=organization_id,
             project_id=project_id,
             temperature=temperature,
+            reasoning_effort=reasoning_effort,
         )
         try:
             # preload model

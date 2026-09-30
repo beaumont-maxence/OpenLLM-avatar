@@ -7,14 +7,7 @@ import numpy as np
 from loguru import logger
 
 from .service_context import ServiceContext
-from .chat_group import (
-    ChatGroupManager,
-    handle_group_operation,
-    handle_client_disconnect,
-    broadcast_to_group,
-)
 from .message_handler import message_handler
-from .utils.stream_audio import prepare_audio_payload
 from .chat_history_manager import (
     create_new_history,
     get_history,
@@ -24,15 +17,24 @@ from .chat_history_manager import (
 from .config_manager.utils import scan_config_alts_directory, scan_bg_directory
 from .conversations.conversation_handler import (
     handle_conversation_trigger,
-    handle_group_interrupt,
     handle_individual_interrupt,
 )
+
+
+# Sent by the prebuilt frontend but not needed by this backend (the group chat
+# and subtitle-relay messages belonged to upstream's removed group chat feature).
+_IGNORED_MESSAGE_TYPES = {
+    "frontend-playback-complete",  # consumed by message_handler instead
+    "audio-play-start",
+    "request-group-info",
+    "add-client-to-group",
+    "remove-client-from-group",
+}
 
 
 class MessageType(Enum):
     """Enum for WebSocket message types"""
 
-    GROUP = ["add-client-to-group", "remove-client-from-group"]
     HISTORY = [
         "fetch-history-list",
         "fetch-and-set-history",
@@ -41,7 +43,7 @@ class MessageType(Enum):
     ]
     CONVERSATION = ["mic-audio-end", "text-input", "ai-speak-signal"]
     CONFIG = ["fetch-configs", "switch-config"]
-    CONTROL = ["interrupt-signal", "audio-play-start"]
+    CONTROL = ["interrupt-signal"]
     DATA = ["mic-audio-data"]
 
 
@@ -65,7 +67,6 @@ class WebSocketHandler:
         """Initialize the WebSocket handler with default context"""
         self.client_connections: Dict[str, WebSocket] = {}
         self.client_contexts: Dict[str, ServiceContext] = {}
-        self.chat_group_manager = ChatGroupManager()
         self.current_conversation_tasks: Dict[str, Optional[asyncio.Task]] = {}
         self.default_context_cache = default_context_cache
         self.received_data_buffers: Dict[str, np.ndarray] = {}
@@ -76,9 +77,6 @@ class WebSocketHandler:
     def _init_message_handlers(self) -> Dict[str, Callable]:
         """Initialize message type to handler mapping"""
         return {
-            "add-client-to-group": self._handle_group_operation,
-            "remove-client-from-group": self._handle_group_operation,
-            "request-group-info": self._handle_group_info,
             "fetch-history-list": self._handle_history_list_request,
             "fetch-and-set-history": self._handle_fetch_history,
             "create-new-history": self._handle_create_history,
@@ -92,7 +90,6 @@ class WebSocketHandler:
             "fetch-configs": self._handle_fetch_configs,
             "switch-config": self._handle_config_switch,
             "fetch-backgrounds": self._handle_fetch_backgrounds,
-            "audio-play-start": self._handle_audio_play_start,
             "request-init-config": self._handle_init_config_request,
             "heartbeat": self._handle_heartbeat,
         }
@@ -138,13 +135,10 @@ class WebSocketHandler:
         client_uid: str,
         session_service_context: ServiceContext,
     ):
-        """Store client data and initialize group status"""
+        """Store client data"""
         self.client_connections[client_uid] = websocket
         self.client_contexts[client_uid] = session_service_context
         self.received_data_buffers[client_uid] = np.array([])
-
-        self.chat_group_manager.client_group_map[client_uid] = ""
-        await self.send_group_update(websocket, client_uid)
 
     async def _send_initial_messages(
         self,
@@ -168,9 +162,6 @@ class WebSocketHandler:
                 }
             )
         )
-
-        # Send initial group status
-        await self.send_group_update(websocket, client_uid)
 
         # Start microphone
         await websocket.send_text(json.dumps({"type": "control", "text": "start-mic"}))
@@ -255,49 +246,11 @@ class WebSocketHandler:
         handler = self._message_handlers.get(msg_type)
         if handler:
             await handler(websocket, client_uid, data)
-        else:
-            if msg_type != "frontend-playback-complete":
-                logger.warning(f"Unknown message type: {msg_type}")
-
-    async def _handle_group_operation(
-        self, websocket: WebSocket, client_uid: str, data: dict
-    ) -> None:
-        """Handle group-related operations"""
-        operation = data.get("type")
-        target_uid = data.get(
-            "invitee_uid" if operation == "add-client-to-group" else "target_uid"
-        )
-
-        await handle_group_operation(
-            operation=operation,
-            client_uid=client_uid,
-            target_uid=target_uid,
-            chat_group_manager=self.chat_group_manager,
-            client_connections=self.client_connections,
-            send_group_update=self.send_group_update,
-        )
+        elif msg_type not in _IGNORED_MESSAGE_TYPES:
+            logger.warning(f"Unknown message type: {msg_type}")
 
     async def handle_disconnect(self, client_uid: str) -> None:
         """Handle client disconnection"""
-        group = self.chat_group_manager.get_client_group(client_uid)
-        if group:
-            await handle_group_interrupt(
-                group_id=group.group_id,
-                heard_response="",
-                current_conversation_tasks=self.current_conversation_tasks,
-                chat_group_manager=self.chat_group_manager,
-                client_contexts=self.client_contexts,
-                broadcast_to_group=self.broadcast_to_group,
-            )
-
-        await handle_client_disconnect(
-            client_uid=client_uid,
-            chat_group_manager=self.chat_group_manager,
-            client_connections=self.client_connections,
-            send_group_update=self.send_group_update,
-        )
-
-        # Clean up other client data
         self.client_connections.pop(client_uid, None)
         context = self.client_contexts.pop(client_uid, None)
         self.received_data_buffers.pop(client_uid, None)
@@ -319,7 +272,6 @@ class WebSocketHandler:
         self.client_connections.pop(client_uid, None)
         context = self.client_contexts.pop(client_uid, None)
         self.received_data_buffers.pop(client_uid, None)
-        self.chat_group_manager.client_group_map.pop(client_uid, None)
 
         if client_uid in self.current_conversation_tasks:
             task = self.current_conversation_tasks[client_uid]
@@ -332,66 +284,17 @@ class WebSocketHandler:
 
         message_handler.cleanup_client(client_uid)
 
-    async def broadcast_to_group(
-        self, group_members: list[str], message: dict, exclude_uid: str = None
-    ) -> None:
-        """Broadcasts a message to group members"""
-        await broadcast_to_group(
-            group_members=group_members,
-            message=message,
-            client_connections=self.client_connections,
-            exclude_uid=exclude_uid,
-        )
-
-    async def send_group_update(self, websocket: WebSocket, client_uid: str):
-        """Sends group information to a client"""
-        group = self.chat_group_manager.get_client_group(client_uid)
-        if group:
-            current_members = self.chat_group_manager.get_group_members(client_uid)
-            await websocket.send_text(
-                json.dumps(
-                    {
-                        "type": "group-update",
-                        "members": current_members,
-                        "is_owner": group.owner_uid == client_uid,
-                    }
-                )
-            )
-        else:
-            await websocket.send_text(
-                json.dumps(
-                    {
-                        "type": "group-update",
-                        "members": [],
-                        "is_owner": False,
-                    }
-                )
-            )
-
     async def _handle_interrupt(
         self, websocket: WebSocket, client_uid: str, data: WSMessage
     ) -> None:
         """Handle conversation interruption"""
         heard_response = data.get("text", "")
-        context = self.client_contexts[client_uid]
-        group = self.chat_group_manager.get_client_group(client_uid)
-
-        if group and len(group.members) > 1:
-            await handle_group_interrupt(
-                group_id=group.group_id,
-                heard_response=heard_response,
-                current_conversation_tasks=self.current_conversation_tasks,
-                chat_group_manager=self.chat_group_manager,
-                client_contexts=self.client_contexts,
-                broadcast_to_group=self.broadcast_to_group,
-            )
-        else:
-            await handle_individual_interrupt(
-                client_uid=client_uid,
-                current_conversation_tasks=self.current_conversation_tasks,
-                context=context,
-                heard_response=heard_response,
-            )
+        await handle_individual_interrupt(
+            client_uid=client_uid,
+            current_conversation_tasks=self.current_conversation_tasks,
+            context=self.client_contexts[client_uid],
+            heard_response=heard_response,
+        )
 
     async def _handle_history_list_request(
         self, websocket: WebSocket, client_uid: str, data: WSMessage
@@ -522,12 +425,8 @@ class WebSocketHandler:
             client_uid=client_uid,
             context=self.client_contexts[client_uid],
             websocket=websocket,
-            client_contexts=self.client_contexts,
-            client_connections=self.client_connections,
-            chat_group_manager=self.chat_group_manager,
             received_data_buffers=self.received_data_buffers,
             current_conversation_tasks=self.current_conversation_tasks,
-            broadcast_to_group=self.broadcast_to_group,
         )
 
     async def _handle_fetch_configs(
@@ -557,32 +456,6 @@ class WebSocketHandler:
         await websocket.send_text(
             json.dumps({"type": "background-files", "files": bg_files})
         )
-
-    async def _handle_audio_play_start(
-        self, websocket: WebSocket, client_uid: str, data: WSMessage
-    ) -> None:
-        """
-        Handle audio playback start notification
-        """
-        group_members = self.chat_group_manager.get_group_members(client_uid)
-        if len(group_members) > 1:
-            display_text = data.get("display_text")
-            if display_text:
-                silent_payload = prepare_audio_payload(
-                    audio_path=None,
-                    display_text=display_text,
-                    actions=None,
-                    forwarded=True,
-                )
-                await self.broadcast_to_group(
-                    group_members, silent_payload, exclude_uid=client_uid
-                )
-
-    async def _handle_group_info(
-        self, websocket: WebSocket, client_uid: str, data: WSMessage
-    ) -> None:
-        """Handle group info request"""
-        await self.send_group_update(websocket, client_uid)
 
     async def _handle_init_config_request(
         self, websocket: WebSocket, client_uid: str, data: WSMessage

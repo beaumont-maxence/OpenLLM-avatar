@@ -3,20 +3,17 @@ import sys
 import atexit
 import asyncio
 import argparse
-import subprocess
+import shutil
 from pathlib import Path
 import tomli
 import uvicorn
 from loguru import logger
-from upgrade_codes.upgrade_manager import UpgradeManager
 
 from src.open_llm_vtuber.server import WebSocketServer
 from src.open_llm_vtuber.config_manager import Config, read_yaml, validate_config
 
 os.environ["HF_HOME"] = str(Path(__file__).parent / "models")
 os.environ["MODELSCOPE_CACHE"] = str(Path(__file__).parent / "models")
-
-upgrade_manager = UpgradeManager()
 
 
 def get_version() -> str:
@@ -47,100 +44,47 @@ def init_logger(console_log_level: str = "INFO") -> None:
     )
 
 
-def check_frontend_submodule(lang=None):
-    """
-    Check if the frontend submodule is initialized. If not, attempt to initialize it.
-    If initialization fails, log an error message.
-    """
-    if lang is None:
-        lang = upgrade_manager.lang
+def check_frontend():
+    """Log an error if the prebuilt web UI in frontend/ is missing.
 
-    frontend_path = Path(__file__).parent / "frontend" / "index.html"
-    if not frontend_path.exists():
-        if lang == "ja":
-            logger.warning("フロントエンドのサブモジュールが見つかりません。サブモジュールの初期化を試みています...")
-        else:
-            logger.warning(
-                "Frontend submodule not found, attempting to initialize submodules..."
-            )
-
-        try:
-            subprocess.run(
-                ["git", "submodule", "update", "--init", "--recursive"], check=True
-            )
-            if frontend_path.exists():
-                if lang == "ja":
-                    logger.info("👍 フロントエンドのサブモジュール（および他のサブモジュール）の初期化に成功しました。")
-                else:
-                    logger.info(
-                        "👍 Frontend submodule (and other submodules) initialized successfully."
-                    )
-            else:
-                if lang == "ja":
-                    logger.critical(
-                        'サブモジュールの初期化に失敗しました。\nこの後ブラウザに {{"detail":"Not Found"}} というエラーが表示されることがあります。詳しくはクイックスタートガイドとよくある問題のページをご確認ください。'
-                    )
-                    logger.error(
-                        "サブモジュールを初期化した後も、フロントエンドのファイルが見つかりません。\n"
-                        + "`frontend` フォルダを手動で変更または削除しませんでしたか？\n"
-                        + "これは Git のサブモジュールであり、直接変更するべきではありません。\n"
-                        + "もし変更してしまった場合は、`git restore frontend` で変更を破棄してから、もう一度試してください。\n"
-                    )
-                else:
-                    logger.critical(
-                        'Failed to initialize submodules. \nYou might see {{"detail":"Not Found"}} in your browser. Please check our quick start guide and common issues page from our documentation.'
-                    )
-                    logger.error(
-                        "Frontend files are still missing after submodule initialization.\n"
-                        + "Did you manually change or delete the `frontend` folder?  \n"
-                        + "It's a Git submodule — you shouldn't modify it directly.  \n"
-                        + "If you did, discard your changes with `git restore frontend`, then try again.\n"
-                    )
-        except Exception as e:
-            if lang == "ja":
-                logger.critical(
-                    f'サブモジュールの初期化に失敗しました: {e}。\nGitHub との間にネットワークの問題がある可能性があります。この後ブラウザに {{"detail":"Not Found"}} というエラーが表示されることがあります。詳しくはクイックスタートガイドとよくある問題のページをご確認ください。\n'
-                )
-            else:
-                logger.critical(
-                    f'Failed to initialize submodules: {e}. \nYou might see {{"detail":"Not Found"}} in your browser. Please check our quick start guide and common issues page from our documentation.\n'
-                )
+    Upstream ships frontend/ as a git submodule; this repo tracks the built files
+    directly, so the fix is to restore them from git.
+    """
+    if not (Path(__file__).parent / "frontend" / "index.html").exists():
+        logger.critical(
+            'frontend/index.html is missing, so the browser will show {"detail":"Not Found"}.\n'
+            "Restore the tracked web UI files with: git restore frontend"
+        )
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Open-LLM-VTuber Server")
+    parser = argparse.ArgumentParser(description="OpenLLM-avatar server")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
-    parser.add_argument(
-        "--hf_mirror", action="store_true", help="Use Hugging Face mirror"
-    )
     return parser.parse_args()
+
+
+def ensure_user_config() -> None:
+    """Create conf.yaml from the platform's local template on first start."""
+    if Path("conf.yaml").exists():
+        return
+    template = "conf.macos.yaml" if sys.platform == "darwin" else "conf.default.yaml"
+    shutil.copy2(Path("config_templates") / template, "conf.yaml")
+    logger.warning(f"conf.yaml not found: created it from config_templates/{template}")
 
 
 @logger.catch
 def run(console_log_level: str):
     init_logger(console_log_level)
-    logger.info(f"Open-LLM-VTuber, version v{get_version()}")
+    logger.info(f"OpenLLM-avatar, version v{get_version()}")
 
-    # Get selected language
-    lang = upgrade_manager.lang
-
-    # Check if the frontend submodule is initialized
-    check_frontend_submodule(lang)
-
-    # Sync user config with default config
-    try:
-        upgrade_manager.sync_user_config()
-    except Exception as e:
-        logger.error(f"Error syncing user config: {e}")
+    check_frontend()
+    ensure_user_config()
 
     atexit.register(WebSocketServer.clean_cache)
 
     # Load configurations from yaml file
     config: Config = validate_config(read_yaml("conf.yaml"))
     server_config = config.system_config
-
-    if server_config.enable_proxy:
-        logger.info("Proxy mode enabled - /proxy-ws endpoint will be available")
 
     # Initialize the WebSocket server (synchronous part)
     server = WebSocketServer(config=config)
@@ -173,6 +117,4 @@ if __name__ == "__main__":
         logger.info(
             "Running in standard mode. For detailed debug logs, use: uv run run_server.py --verbose"
         )
-    if args.hf_mirror:
-        os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
     run(console_log_level=console_log_level)

@@ -9,7 +9,6 @@ from starlette.websockets import WebSocketDisconnect
 from loguru import logger
 from .service_context import ServiceContext
 from .websocket_handler import WebSocketHandler
-from .proxy_handler import ProxyHandler
 
 
 def init_client_ws_route(default_context_cache: ServiceContext) -> APIRouter:
@@ -40,31 +39,6 @@ def init_client_ws_route(default_context_cache: ServiceContext) -> APIRouter:
         except Exception as e:
             logger.error(f"Error in WebSocket connection: {e}")
             await ws_handler.handle_disconnect(client_uid)
-            raise
-
-    return router
-
-
-def init_proxy_route(server_url: str) -> APIRouter:
-    """
-    Create and return API routes for handling proxy connections.
-
-    Args:
-        server_url: The WebSocket URL of the actual server
-
-    Returns:
-        APIRouter: Configured router with proxy WebSocket endpoint
-    """
-    router = APIRouter()
-    proxy_handler = ProxyHandler(server_url)
-
-    @router.websocket("/proxy-ws")
-    async def proxy_endpoint(websocket: WebSocket):
-        """WebSocket endpoint for proxy connections"""
-        try:
-            await proxy_handler.handle_client_connection(websocket)
-        except Exception as e:
-            logger.error(f"Error in proxy connection: {e}")
             raise
 
     return router

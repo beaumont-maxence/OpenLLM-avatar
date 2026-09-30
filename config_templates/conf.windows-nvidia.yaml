@@ -1,3 +1,5 @@
+# Fully local config for Windows with an NVIDIA GPU (install with `uv sync --extra nvidia`).
+# Copy to the project root as conf.yaml.
 # System Settings: Setting related to the initialization of the server
 system_config:
   host: 'localhost' # use 0.0.0.0 if you want other devices to access this page
@@ -107,11 +109,13 @@ character_config:
 
       ollama_llm:
         base_url: 'http://localhost:11434/v1'
-        model: 'qwen2.5:latest'
+        # Run `ollama pull <model>` first. Needs a vision model for camera frames.
+        model: 'qwen3.5:9b'
         temperature: 1.0 # value between 0 to 2
         # seconds to keep the model in memory after inactivity. 
         # set to -1 to keep the model in memory forever (even after exiting open llm vtuber)
-        reasoning_effort: null # 'none' disables thinking on reasoning models (lower latency); null = model default
+        # 'none' turns off hidden thinking on reasoning models (qwen3.5): ~1 s replies instead of minutes.
+        reasoning_effort: 'none'
         keep_alive: -1
         unload_at_exit: True # unload the model from memory at exit
 
@@ -129,7 +133,7 @@ character_config:
   # === Automatic Speech Recognition ===
   asr_config:
     # speech to text model options: 'faster_whisper', 'whisper_cpp', 'whisper', 'fun_asr', 'sherpa_onnx_asr'
-    asr_model: 'sherpa_onnx_asr'
+    asr_model: 'faster_whisper' # needs `uv sync --extra nvidia`; use 'sherpa_onnx_asr' without a GPU
 
 
     # Faster whisper config
@@ -137,8 +141,8 @@ character_config:
       model_path: 'large-v3-turbo' # model path, name, or id from hf hub
       download_root: 'models/whisper'
       language: 'en' # en, zh, or something else. put nothing for auto-detect.
-      device: 'auto' # cpu, cuda, or auto. faster-whisper doesn't support mps
-      compute_type: 'int8'
+      device: 'cuda' # cpu, cuda, or auto. faster-whisper doesn't support mps
+      compute_type: 'float16'
       prompt: '' # You can put a prompt here to help the model understand the context of the audio
 
     whisper_cpp:
@@ -325,7 +329,7 @@ character_config:
       vits_model: './models/vits-piper-en_US-lessac-medium/en_US-lessac-medium.onnx' # Path to VITS model file
       vits_lexicon: '' # Path to lexicon file (optional)
       vits_tokens: './models/vits-piper-en_US-lessac-medium/tokens.txt' # Path to tokens file
-      vits_data_dir: './models/vits-piper-en_US-lessac-medium/espeak-ng-data' # Path to espeak-ng data (optional)
+      vits_data_dir: './models/vits-piper-en_US-lessac-medium/espeak-ng-data'  # Path to espeak-ng data (optional)
       vits_dict_dir: '' # Path to Jieba dict (optional, for Chinese)
       tts_rule_fsts: '' # Path to rule FSTs file (optional)
       max_num_sentences: 2 # Max sentences per batch (or -1 for all)

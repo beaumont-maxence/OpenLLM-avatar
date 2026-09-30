@@ -24,34 +24,6 @@ class DeepLXConfig(I18nMixin):
     }
 
 
-class TencentConfig(I18nMixin):
-    """Configuration for tencent translation service."""
-
-    secret_id: str = Field(..., description="Tencent Secret ID")
-    secret_key: str = Field(..., description="Tencent Secret Key")
-    region: str = Field(..., description="Region for Tencent Service")
-    source_lang: str = Field(
-        ..., description="Source language code for tencent translation"
-    )
-    target_lang: str = Field(
-        ..., description="Target language code for tencent translation"
-    )
-
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "secret_id": Description(en="Tencent Secret ID", ja="Tencent Secret ID"),
-        "secret_key": Description(en="Tencent Secret Key", ja="Tencent Secret Key"),
-        "region": Description(en="Region for Tencent Service", ja="Tencentサービスのリージョン"),
-        "source_lang": Description(
-            en="Source language code for tencent translation",
-            ja="Tencent翻訳のソース言語コード",
-        ),
-        "target_lang": Description(
-            en="Target language code for tencent translation",
-            ja="Tencent翻訳のターゲット言語コード",
-        ),
-    }
-
-
 # --- Main TranslatorConfig model ---
 
 
@@ -59,11 +31,8 @@ class TranslatorConfig(I18nMixin):
     """Configuration for translation services."""
 
     translate_audio: bool = Field(..., alias="translate_audio")
-    translate_provider: Literal["deeplx", "tencent"] = Field(
-        ..., alias="translate_provider"
-    )
+    translate_provider: Literal["deeplx"] = Field(..., alias="translate_provider")
     deeplx: Optional[DeepLXConfig] = Field(None, alias="deeplx")
-    tencent: Optional[TencentConfig] = Field(None, alias="tencent")
 
     DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
         "translate_audio": Description(
@@ -78,10 +47,6 @@ class TranslatorConfig(I18nMixin):
             en="Configuration for DeepLX translation service",
             ja="DeepLX翻訳サービスの設定",
         ),
-        "tencent": Description(
-            en="Configuration for TenCent translation service",
-            ja="Tencent翻訳サービスの設定",
-        ),
     }
 
     @model_validator(mode="after")
@@ -93,10 +58,6 @@ class TranslatorConfig(I18nMixin):
             if translate_provider == "deeplx" and values.deeplx is None:
                 raise ValueError(
                     "DeepLX configuration must be provided when translate_audio is True and translate_provider is 'deeplx'"
-                )
-            elif translate_provider == "tencent" and values.tencent is None:
-                raise ValueError(
-                    "Tencent configuration must be provided when translate_audio is True and translate_provider is 'tencent'"
                 )
 
         return values

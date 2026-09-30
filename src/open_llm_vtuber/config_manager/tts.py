@@ -3,142 +3,6 @@ from pydantic import ValidationInfo, Field, model_validator
 from typing import Literal, Optional, Dict, ClassVar
 from .i18n import I18nMixin, Description
 
-CartesiaLanguages = Literal[
-    "en",
-    "fr",
-    "de",
-    "es",
-    "pt",
-    "zh",
-    "ja",
-    "hi",
-    "it",
-    "ko",
-    "nl",
-    "pl",
-    "ru",
-    "sv",
-    "tr",
-    "tl",
-    "bg",
-    "ro",
-    "ar",
-    "cs",
-    "el",
-    "fi",
-    "hr",
-    "ms",
-    "sk",
-    "da",
-    "ta",
-    "uk",
-    "hu",
-    "no",
-    "vi",
-    "bn",
-    "th",
-    "he",
-    "ka",
-    "id",
-    "te",
-    "gu",
-    "kn",
-    "ml",
-    "mr",
-    "pa",
-]
-
-CartesiaEmotions = Literal[
-    "neutral",
-    "angry",
-    "excited",
-    "content",
-    "sad",
-    "scared",
-    "happy",
-    "enthusiastic",
-    "elated",
-    "euphoric",
-    "triumphant",
-    "amazed",
-    "surprised",
-    "flirtatious",
-    "joking/comedic",
-    "curious",
-    "peaceful",
-    "serene",
-    "calm",
-    "grateful",
-    "affectionate",
-    "trust",
-    "sympathetic",
-    "anticipation",
-    "mysterious",
-    "mad",
-    "outraged",
-    "frustrated",
-    "agitated",
-    "threatened",
-    "disgusted",
-    "contempt",
-    "envious",
-    "sarcastic",
-    "ironic",
-    "dejected",
-    "melancholic",
-    "disappointed",
-    "hurt",
-    "guilty",
-    "bored",
-    "tired",
-    "rejected",
-    "nostalgic",
-    "wistful",
-    "apologetic",
-    "hesitant",
-    "insecure",
-    "confused",
-    "resigned",
-    "anxious",
-    "panicked",
-    "alarmed",
-    "proud",
-    "confident",
-    "distant",
-    "skeptical",
-    "contemplative",
-    "determined",
-]
-
-
-class AzureTTSConfig(I18nMixin):
-    """Configuration for Azure TTS service."""
-
-    api_key: str = Field(..., alias="api_key")
-    region: str = Field(..., alias="region")
-    voice: str = Field(..., alias="voice")
-    pitch: str = Field(..., alias="pitch")
-    rate: str = Field(..., alias="rate")
-
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "api_key": Description(
-            en="API key for Azure TTS service",
-            ja="Azure TTSサービスのAPIキー",
-        ),
-        "region": Description(
-            en="Azure region (e.g., eastus)",
-            ja="Azureのリージョン（例: eastus）",
-        ),
-        "voice": Description(
-            en="Voice name to use for Azure TTS",
-            ja="Azure TTSで使用する音声名",
-        ),
-        "pitch": Description(
-            en="Pitch adjustment percentage", ja="ピッチ調整のパーセンテージ"
-        ),
-        "rate": Description(en="Speaking rate adjustment", ja="話速の調整"),
-    }
-
 
 class BarkTTSConfig(I18nMixin):
     """Configuration for Bark TTS."""
@@ -149,19 +13,6 @@ class BarkTTSConfig(I18nMixin):
         "voice": Description(
             en="Voice name to use for Bark TTS",
             ja="Bark TTSで使用する音声名",
-        ),
-    }
-
-
-class EdgeTTSConfig(I18nMixin):
-    """Configuration for Edge TTS."""
-
-    voice: str = Field(..., alias="voice")
-
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "voice": Description(
-            en="Voice name to use for Edge TTS (use 'edge-tts --list-voices' to list available voices)",
-            ja="Edge TTSで使用する音声名（利用可能な音声の一覧は'edge-tts --list-voices'で確認できます）",
         ),
     }
 
@@ -339,34 +190,6 @@ class GPTSoVITSConfig(I18nMixin):
     }
 
 
-class FishAPITTSConfig(I18nMixin):
-    """Configuration for Fish API TTS."""
-
-    api_key: str = Field(..., alias="api_key")
-    reference_id: str = Field(..., alias="reference_id")
-    latency: Literal["normal", "balanced"] = Field(..., alias="latency")
-    base_url: str = Field(..., alias="base_url")
-
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "api_key": Description(
-            en="API key for Fish TTS service",
-            ja="Fish TTSサービスのAPIキー",
-        ),
-        "reference_id": Description(
-            en="Voice reference ID from Fish Audio website",
-            ja="Fish AudioウェブサイトのVoiceリファレンスID",
-        ),
-        "latency": Description(
-            en="Latency mode (normal or balanced)",
-            ja="レイテンシモード（normalまたはbalanced）",
-        ),
-        "base_url": Description(
-            en="Base URL for Fish TTS API",
-            ja="Fish TTS APIのベースURL",
-        ),
-    }
-
-
 class CoquiTTSConfig(I18nMixin):
     """Configuration for Coqui TTS."""
 
@@ -454,54 +277,6 @@ class SherpaOnnxTTSConfig(I18nMixin):
     }
 
 
-class SiliconFlowTTSConfig(I18nMixin):
-    """Configuration for SiliconFlow TTS."""
-
-    api_url: str = Field("https://api.siliconflow.cn/v1/audio/speech", alias="api_url")
-    api_key: str = Field(..., alias="api_key")
-    default_model: str = Field("FunAudioLLM/CosyVoice2-0.5B", alias="default_model")
-    default_voice: str = Field(
-        "speech:Dreamflowers:5bdstvc39i:xkqldnpasqmoqbakubom", alias="default_voice"
-    )
-    sample_rate: int = Field(32000, alias="sample_rate")
-    response_format: str = Field("mp3", alias="response_format")
-    stream: bool = Field(True, alias="stream")
-    speed: float = Field(1, alias="speed")
-    gain: int = Field(0, alias="gain")
-
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "api_key": Description(
-            en="API key for SiliconFlow TTS service",
-            ja="SiliconFlow TTSサービスのAPIキー",
-        ),
-        "api_url": Description(
-            en="API endpoint URL for SiliconFlow TTS",
-            ja="SiliconFlow TTSのAPIエンドポイントURL",
-        ),
-        "default_model": Description(
-            en="Model to use for SiliconFlow TTS",
-            ja="SiliconFlow TTSで使用するモデル",
-        ),
-        "default_voice": Description(
-            en="Voice name to use for SiliconFlow TTS",
-            ja="SiliconFlow TTSで使用する音声名",
-        ),
-        "sample_rate": Description(
-            en="Sample rate of the output audio",
-            ja="出力音声のサンプルレート",
-        ),
-        "response_format": Description(
-            en="Audio format of the response (e.g. mp3)",
-            ja="レスポンスの音声フォーマット（例: mp3）",
-        ),
-        "stream": Description(
-            en="Enable streaming mode", ja="ストリーミングモードを有効にする"
-        ),
-        "speed": Description(en="Speaking speed multiplier", ja="話速の倍率"),
-        "gain": Description(en="Audio gain adjustment", ja="音声ゲインの調整"),
-    }
-
-
 class OpenAITTSConfig(I18nMixin):
     """Configuration for OpenAI-compatible TTS client."""
 
@@ -569,27 +344,6 @@ class SparkTTSConfig(I18nMixin):
         "speed": Description(
             en="Speed of the voice (in percent) default 3,range 1-5.",
             ja="音声の速度（パーセント）デフォルト3、範囲1〜5。",
-        ),
-    }
-
-
-class MinimaxTTSConfig(I18nMixin):
-    """Configuration for Minimax TTS."""
-
-    group_id: str = Field(..., alias="group_id")
-    api_key: str = Field(..., alias="api_key")
-    model: str = Field("speech-02-turbo", alias="model")
-    voice_id: str = Field("male-qn-qingse", alias="voice_id")
-    pronunciation_dict: str = Field("", alias="pronunciation_dict")
-
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "group_id": Description(en="Minimax group_id", ja="Minimaxのgroup_id"),
-        "api_key": Description(en="Minimax API key", ja="Minimax APIキー"),
-        "model": Description(en="Minimax model name", ja="Minimaxのモデル名"),
-        "voice_id": Description(en="Minimax voice id", ja="Minimaxの音声ID"),
-        "pronunciation_dict": Description(
-            en="Custom pronunciation dictionary (string)",
-            ja="カスタム発音辞書（文字列）",
         ),
     }
 
@@ -675,151 +429,36 @@ class KokoroTTSConfig(I18nMixin):
     }
 
 
-class ElevenLabsTTSConfig(I18nMixin):
-    """Configuration for ElevenLabs TTS."""
-
-    api_key: str = Field(..., alias="api_key")
-    voice_id: str = Field(..., alias="voice_id")
-    model_id: str = Field("eleven_multilingual_v2", alias="model_id")
-    output_format: str = Field("mp3_44100_128", alias="output_format")
-    stability: float = Field(0.5, alias="stability")
-    similarity_boost: float = Field(0.5, alias="similarity_boost")
-    style: float = Field(0.0, alias="style")
-    use_speaker_boost: bool = Field(True, alias="use_speaker_boost")
-
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "api_key": Description(
-            en="API key for ElevenLabs TTS service",
-            ja="ElevenLabs TTSサービスのAPIキー",
-        ),
-        "voice_id": Description(
-            en="Voice ID from ElevenLabs (e.g., JBFqnCBsd6RMkjVDRZzb)",
-            ja="ElevenLabsのVoice ID（例: JBFqnCBsd6RMkjVDRZzb）",
-        ),
-        "model_id": Description(
-            en="Model ID for ElevenLabs (e.g., eleven_multilingual_v2)",
-            ja="ElevenLabsのModel ID（例: eleven_multilingual_v2）",
-        ),
-        "output_format": Description(
-            en="Output audio format (e.g., mp3_44100_128)",
-            ja="出力音声フォーマット（例: mp3_44100_128）",
-        ),
-        "stability": Description(
-            en="Voice stability (0.0 to 1.0)",
-            ja="音声の安定性（0.0〜1.0）",
-        ),
-        "similarity_boost": Description(
-            en="Voice similarity boost (0.0 to 1.0)",
-            ja="音声の類似度ブースト（0.0〜1.0）",
-        ),
-        "style": Description(
-            en="Voice style exaggeration (0.0 to 1.0)",
-            ja="音声スタイルの誇張度（0.0〜1.0）",
-        ),
-        "use_speaker_boost": Description(
-            en="Enable speaker boost for better quality",
-            ja="音質向上のためのスピーカーブーストを有効にする",
-        ),
-    }
-
-
-class CartesiaTTSConfig(I18nMixin):
-    """Configuration for Cartesia TTS."""
-
-    model_id: Literal[
-        "sonic-3", "sonic-2", "sonic-turbo", "sonic-multilingual", "sonic"
-    ] = Field("sonic-3", alias="model_id")
-
-    api_key: str = Field(..., alias="api_key")
-    voice_id: str = Field(..., alias="voice_id")
-    output_format: Literal["wav", "mp3"] = Field("wav", alias="output_format")
-    language: CartesiaLanguages = Field("en", alias="language")
-    emotion: CartesiaEmotions = Field("neutral", alias="emotion")
-    volume: float = Field(1.0, alias="volume")
-    speed: float = Field(1.0, alias="speed")
-
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "api_key": Description(
-            en="API key for Cartesia TTS service",
-            ja="Cartesia TTSサービスのAPIキー",
-        ),
-        "voice_id": Description(
-            en="Voice ID from Cartesia (e.g., 6ccbfb76-1fc6-48f7-b71d-91ac6298247b)",
-            ja="CartesiaのVoice ID（例: 6ccbfb76-1fc6-48f7-b71d-91ac6298247b）",
-        ),
-        "model_id": Description(
-            en="Model ID for Cartesia (e.g., sonic-3)",
-            ja="CartesiaのModel ID（例: sonic-3）",
-        ),
-        "output_format": Description(
-            en="Output audio format (e.g., wav)",
-            ja="出力音声フォーマット（例: wav）",
-        ),
-        "language": Description(
-            en="The language that the given voice should speak (e.g., en)",
-            ja="指定した音声が話す言語（例: en）",
-        ),
-        "emotion": Description(
-            en="Emotional guidance for a generation (e.g., neutral)",
-            ja="生成における感情の指示（例: neutral）",
-        ),
-        "volume": Description(
-            en="volume of the generation, ranging from 0.5 to 2.0 (e.g., 1)",
-            ja="生成の音量、0.5〜2.0の範囲（例: 1）",
-        ),
-        "speed": Description(
-            en="Speed of the generation, ranging from 0.6 to 1.5 (e.g., 1)",
-            ja="生成の速度、0.6〜1.5の範囲（例: 1）",
-        ),
-    }
-
-
 class TTSConfig(I18nMixin):
     """Configuration for Text-to-Speech."""
 
     tts_model: Literal[
-        "azure_tts",
         "bark_tts",
-        "edge_tts",
         "cosyvoice_tts",
         "cosyvoice2_tts",
         "melo_tts",
         "coqui_tts",
         "x_tts",
         "gpt_sovits_tts",
-        "fish_api_tts",
         "sherpa_onnx_tts",
-        "siliconflow_tts",
         "openai_tts",  # Add openai_tts here
         "spark_tts",
-        "minimax_tts",
-        "elevenlabs_tts",
-        "cartesia_tts",
         "piper_tts",
         "kokoro_tts",
     ] = Field(..., alias="tts_model")
 
-    azure_tts: Optional[AzureTTSConfig] = Field(None, alias="azure_tts")
     bark_tts: Optional[BarkTTSConfig] = Field(None, alias="bark_tts")
-    edge_tts: Optional[EdgeTTSConfig] = Field(None, alias="edge_tts")
     cosyvoice_tts: Optional[CosyvoiceTTSConfig] = Field(None, alias="cosyvoice_tts")
     cosyvoice2_tts: Optional[Cosyvoice2TTSConfig] = Field(None, alias="cosyvoice2_tts")
     melo_tts: Optional[MeloTTSConfig] = Field(None, alias="melo_tts")
     coqui_tts: Optional[CoquiTTSConfig] = Field(None, alias="coqui_tts")
     x_tts: Optional[XTTSConfig] = Field(None, alias="x_tts")
     gpt_sovits_tts: Optional[GPTSoVITSConfig] = Field(None, alias="gpt_sovits")
-    fish_api_tts: Optional[FishAPITTSConfig] = Field(None, alias="fish_api_tts")
     sherpa_onnx_tts: Optional[SherpaOnnxTTSConfig] = Field(
         None, alias="sherpa_onnx_tts"
     )
-    siliconflow_tts: Optional[SiliconFlowTTSConfig] = Field(
-        None, alias="siliconflow_tts"
-    )
     openai_tts: Optional[OpenAITTSConfig] = Field(None, alias="openai_tts")
     spark_tts: Optional[SparkTTSConfig] = Field(None, alias="spark_tts")
-    minimax_tts: Optional[MinimaxTTSConfig] = Field(None, alias="minimax_tts")
-    elevenlabs_tts: ElevenLabsTTSConfig | None = Field(None, alias="elevenlabs_tts")
-    cartesia_tts: CartesiaTTSConfig | None = Field(None, alias="cartesia_tts")
     piper_tts: Optional[PiperTTSConfig] = Field(None, alias="piper_tts")
     kokoro_tts: Optional[KokoroTTSConfig] = Field(None, alias="kokoro_tts")
 
@@ -828,11 +467,7 @@ class TTSConfig(I18nMixin):
             en="Text-to-speech model to use",
             ja="使用する音声合成（TTS）モデル",
         ),
-        "azure_tts": Description(
-            en="Configuration for Azure TTS", ja="Azure TTSの設定"
-        ),
         "bark_tts": Description(en="Configuration for Bark TTS", ja="Bark TTSの設定"),
-        "edge_tts": Description(en="Configuration for Edge TTS", ja="Edge TTSの設定"),
         "cosyvoice_tts": Description(
             en="Configuration for Cosyvoice TTS",
             ja="Cosyvoice TTSの設定",
@@ -850,17 +485,9 @@ class TTSConfig(I18nMixin):
             en="Configuration for GPT-SoVITS",
             ja="GPT-SoVITSの設定",
         ),
-        "fish_api_tts": Description(
-            en="Configuration for Fish API TTS",
-            ja="Fish API TTSの設定",
-        ),
         "sherpa_onnx_tts": Description(
             en="Configuration for Sherpa Onnx TTS",
             ja="Sherpa Onnx TTSの設定",
-        ),
-        "siliconflow_tts": Description(
-            en="Configuration for SiliconFlow TTS",
-            ja="SiliconFlow TTSの設定",
         ),
         "openai_tts": Description(
             en="Configuration for OpenAI-compatible TTS",
@@ -868,18 +495,6 @@ class TTSConfig(I18nMixin):
         ),
         "spark_tts": Description(
             en="Configuration for Spark TTS", ja="Spark TTSの設定"
-        ),
-        "minimax_tts": Description(
-            en="Configuration for Minimax TTS",
-            ja="Minimax TTSの設定",
-        ),
-        "elevenlabs_tts": Description(
-            en="Configuration for ElevenLabs TTS",
-            ja="ElevenLabs TTSの設定",
-        ),
-        "cartesia_tts": Description(
-            en="Configuration for Cartesia TTS",
-            ja="Cartesia TTSの設定",
         ),
         "piper_tts": Description(
             en="Configuration for Piper TTS", ja="Piper TTSの設定"

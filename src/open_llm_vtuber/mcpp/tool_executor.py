@@ -77,35 +77,13 @@ class ToolExecutor:
 
     def format_tool_result(
         self,
-        caller_mode: Literal["Claude", "OpenAI", "Prompt"],
+        caller_mode: Literal["OpenAI", "Prompt"],
         tool_id: str,
         result_content: str,
         is_error: bool,
     ) -> Dict[str, Any] | None:
         """Format tool result for LLM API."""
-        if caller_mode == "Claude":
-            # Claude expects content as a list of blocks or a simple string
-            # We will return a list if there are multiple items or non-text items
-            if isinstance(result_content, list):
-                # Already formatted as list of blocks
-                content_to_send = result_content
-            elif isinstance(result_content, str) and result_content:
-                # Simple text result
-                content_to_send = result_content
-            elif not result_content and is_error:
-                # Error case, send error message as string
-                content_to_send = "Error occurred during tool execution."
-            else:
-                # Fallback for empty or unexpected content
-                content_to_send = ""
-
-            return {
-                "type": "tool_result",
-                "tool_use_id": tool_id,
-                "content": content_to_send,
-                "is_error": is_error,
-            }
-        elif caller_mode == "OpenAI":
+        if caller_mode == "OpenAI":
             # OpenAI expects content as a string
             return {
                 "role": "tool",
@@ -155,7 +133,7 @@ class ToolExecutor:
     async def execute_tools(
         self,
         tool_calls: Union[List[Dict[str, Any]], List[ToolCallObject]],
-        caller_mode: Literal["Claude", "OpenAI", "Prompt"],
+        caller_mode: Literal["OpenAI", "Prompt"],
     ) -> AsyncIterator[Dict[str, Any]]:
         """Execute tools and yield status updates."""
         tool_results_for_llm = []
@@ -236,32 +214,7 @@ class ToolExecutor:
                         f"{text_content}\n[Tool returned {num_images} image(s)]".strip()
                     )
 
-                    if caller_mode == "Claude":
-                        # Format for Claude: list of blocks
-                        claude_blocks = []
-                        if text_content:
-                            claude_blocks.append({"type": "text", "text": text_content})
-                        for item in content_items:
-                            if (
-                                item.get("type") == "image"
-                                and "data" in item
-                                and "mimeType" in item
-                            ):
-                                claude_blocks.append(
-                                    {
-                                        "type": "image",
-                                        "source": {
-                                            "type": "base64",
-                                            "media_type": item["mimeType"],
-                                            "data": item["data"],
-                                        },
-                                    }
-                                )
-                            # Add other non-text types here
-                        llm_formatted_content = (
-                            claude_blocks if claude_blocks else ""
-                        )  # Use blocks or empty string
-                    elif caller_mode in ["OpenAI", "Prompt"]:
+                    if caller_mode in ["OpenAI", "Prompt"]:
                         llm_formatted_content = status_content
 
             # Prepare and yield tool call status update

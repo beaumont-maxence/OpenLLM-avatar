@@ -136,16 +136,15 @@ class ToolAdapter:
 
     def format_tools_for_api(
         self, formatted_tools_dict: Dict[str, FormattedTool]
-    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-        """Format tools to OpenAI and Claude function-calling compatible schemas."""
+    ) -> List[Dict[str, Any]]:
+        """Format tools to the OpenAI function-calling schema."""
         openai_tools = []
-        claude_tools = []
 
         if not formatted_tools_dict:
             logger.warning(
                 "MC: Cannot format tools for API, input dictionary is empty."
             )
-            return openai_tools, claude_tools
+            return openai_tools
 
         logger.debug(f"MC: Formatting {len(formatted_tools_dict)} tools for API usage.")
 
@@ -197,28 +196,12 @@ class ToolAdapter:
                 }
             )
 
-            # Format for Claude
-            claude_input_schema = {
-                "type": "object",
-                "properties": properties,
-                "required": required_params,
-            }
-            claude_tools.append(
-                {
-                    "name": tool_name,
-                    "description": tool_description,
-                    "input_schema": claude_input_schema,
-                }
-            )
-
-        logger.debug(
-            f"MC: Finished formatting tools. OpenAI: {len(openai_tools)}, Claude: {len(claude_tools)}."
-        )
-        return openai_tools, claude_tools
+        logger.debug(f"MC: Finished formatting tools. OpenAI: {len(openai_tools)}.")
+        return openai_tools
 
     async def get_tools(
         self, enabled_servers: List[str]
-    ) -> Tuple[str, List[Dict[str, Any]], List[Dict[str, Any]]]:
+    ) -> Tuple[str, List[Dict[str, Any]]]:
         """Run the dynamic fetching and formatting process."""
         logger.info(
             f"MC: Running dynamic tool construction for servers: {enabled_servers}"
@@ -227,6 +210,6 @@ class ToolAdapter:
             enabled_servers
         )
         mcp_prompt_string = self.construct_mcp_prompt_string(servers_info)
-        openai_tools, claude_tools = self.format_tools_for_api(formatted_tools_dict)
+        openai_tools = self.format_tools_for_api(formatted_tools_dict)
         logger.info("MC: Dynamic tool construction complete.")
-        return mcp_prompt_string, openai_tools, claude_tools
+        return mcp_prompt_string, openai_tools

@@ -14,7 +14,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 from starlette.staticfiles import StaticFiles as StarletteStaticFiles
 
-from .routes import init_client_ws_route, init_webtool_routes, init_proxy_route
+from .routes import init_client_ws_route, init_webtool_routes
 from .service_context import ServiceContext
 from .config_manager.utils import Config
 
@@ -58,7 +58,7 @@ class WebSocketServer:
     API server for Open-LLM-VTuber. This contains the websocket endpoint for the client, hosts the web tool, and serves static files.
 
     Creates and configures a FastAPI app, registers all routes
-    (WebSocket, web tools, proxy) and mounts static assets with CORS.
+    (WebSocket, web tools) and mounts static assets with CORS.
 
     Args:
         config (Config): Application configuration containing system settings.
@@ -98,17 +98,6 @@ class WebSocketServer:
             init_webtool_routes(default_context_cache=self.default_context_cache),
         )
 
-        # Initialize and include proxy routes if proxy is enabled
-        system_config = config.system_config
-        if hasattr(system_config, "enable_proxy") and system_config.enable_proxy:
-            # Construct the server URL for the proxy
-            host = system_config.host
-            port = system_config.port
-            server_url = f"ws://{host}:{port}/client-ws"
-            self.app.include_router(
-                init_proxy_route(server_url=server_url),
-            )
-
         # Mount cache directory first (to ensure audio file access)
         if not os.path.exists("cache"):
             os.makedirs("cache")
@@ -129,6 +118,7 @@ class WebSocketServer:
             CORSStaticFiles(directory="backgrounds"),
             name="backgrounds",
         )
+        os.makedirs("avatars", exist_ok=True)  # gitignored, so absent in a fresh clone
         self.app.mount(
             "/avatars",
             AvatarStaticFiles(directory="avatars"),

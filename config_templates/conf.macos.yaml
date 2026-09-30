@@ -1,3 +1,5 @@
+# Fully local config for macOS (Apple Silicon / Intel). Also works as a CPU-only config on Windows.
+# Copy to the project root as conf.yaml.
 # System Settings: Setting related to the initialization of the server
 system_config:
   host: 'localhost' # use 0.0.0.0 if you want other devices to access this page
@@ -107,11 +109,13 @@ character_config:
 
       ollama_llm:
         base_url: 'http://localhost:11434/v1'
-        model: 'qwen2.5:latest'
+        # Run `ollama pull <model>` first. Needs a vision model for camera frames.
+        model: 'qwen3.5:9b-mlx' # MLX build: Apple Silicon only; use 'qwen3.5:9b' on Intel
         temperature: 1.0 # value between 0 to 2
         # seconds to keep the model in memory after inactivity. 
         # set to -1 to keep the model in memory forever (even after exiting open llm vtuber)
-        reasoning_effort: null # 'none' disables thinking on reasoning models (lower latency); null = model default
+        # 'none' turns off hidden thinking on reasoning models (qwen3.5): ~1 s replies instead of minutes.
+        reasoning_effort: 'none'
         keep_alive: -1
         unload_at_exit: True # unload the model from memory at exit
 
@@ -325,7 +329,7 @@ character_config:
       vits_model: './models/vits-piper-en_US-lessac-medium/en_US-lessac-medium.onnx' # Path to VITS model file
       vits_lexicon: '' # Path to lexicon file (optional)
       vits_tokens: './models/vits-piper-en_US-lessac-medium/tokens.txt' # Path to tokens file
-      vits_data_dir: './models/vits-piper-en_US-lessac-medium/espeak-ng-data' # Path to espeak-ng data (optional)
+      vits_data_dir: './models/vits-piper-en_US-lessac-medium/espeak-ng-data'  # Path to espeak-ng data (optional)
       vits_dict_dir: '' # Path to Jieba dict (optional, for Chinese)
       tts_rule_fsts: '' # Path to rule FSTs file (optional)
       max_num_sentences: 2 # Max sentences per batch (or -1 for all)

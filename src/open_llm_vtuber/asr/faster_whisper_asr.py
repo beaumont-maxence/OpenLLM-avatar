@@ -1,5 +1,12 @@
+import sys
+
 import numpy as np
-from faster_whisper import WhisperModel
+
+if sys.platform == "win32":
+    # ctranslate2 needs cuBLAS/cuDNN DLLs on Windows; the CUDA torch wheel ships them
+    # in torch/lib and loads them on import, so they are found by name afterwards.
+    import torch  # noqa: F401
+from faster_whisper import WhisperModel  # noqa: E402
 from .asr_interface import ASRInterface
 
 

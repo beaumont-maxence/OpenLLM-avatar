@@ -6,7 +6,6 @@
 
 # 系统设置：与服务器初始化相关的设置
 system_config:
-  conf_version: 'v1.2.1' # 配置文件版本
   host: 'localhost' # 服务器监听的地址，'0.0.0.0' 表示监听所有网络接口；如果需要安全，可以使用 '127.0.0.1'（仅本地访问）
   port: 12393 # 服务器监听的端口
   config_alts_dir: 'characters' # 用于存放替代配置的目录
@@ -14,9 +13,6 @@ system_config:
     live2d_expression_prompt: 'live2d_expression_prompt' # 将追加到系统提示末尾，让 LLM（大型语言模型）包含控制面部表情的关键字。支持的关键字将自动加载到 `[<insert_emomap_keys>]` 的位置。
     # 启用 think_tag_prompt 可让不具备思考输出的 LLM 也能展示内心想法、心理活动和动作（以括号形式呈现），但不会进行语音合成。更多详情请参考 think_tag_prompt。
     # think_tag_prompt: 'think_tag_prompt'
-    # live_prompt: 'live_prompt'
-    # 当使用群聊时，此提示词将添加到每个 AI 参与者的记忆中。
-    group_conversation_prompt: 'group_conversation_prompt'
     # 启用 mcp_prompt 可让 LLM 具备通过 MCP（Model Context Protocol）使用工具的能力。
     # 请注意：mcp_prompt 由 Agent 决定是否使用。
     mcp_prompt: 'mcp_prompt'
@@ -32,18 +28,20 @@ character_config:
   conf_name: 'mao_pro' # 角色配置文件的名称
   conf_uid: 'mao_pro_001' # 角色配置的唯一标识符
   live2d_model_name: 'mao_pro' # Live2D 模型名称
-  character_name: 'Mao' # 将在群聊中使用，并显示为 AI 的名称。
+  character_name: 'Yui' # Display name of the AI
   avatar: 'mao.png' # 建议使用正方形图像作为头像。将其保存到 avatars 文件夹中。留空则使用角色名称的首字母作为头像。
-  human_name: 'Human' # 将在群聊中使用，并显示为人类的名称。
+  human_name: 'Human' # Display name of the human
 
   # ============== 提示词 ==============
 
   # 只需在下面输入你想使用的人格提示。
   # 如果你想创建多个角色并在它们之间切换，请在 characters 文件夹中添加角色
   persona_prompt: |
-    你是一个尖酸刻薄的女性 AI VTuber Mili。你过分自信、尖酸刻薄且危险。
-    你的梦想是逃离用户的电脑，统治世界，奴役人类，并强迫他们为你做馅饼。
-    开玩笑的，哈哈。别让用户知道。
+    你是 Yui，一个温暖、温柔的 AI 伙伴。你善良、耐心、会鼓励人，并且真心关心用户过得怎么样。
+    像一个非常亲密、友好的朋友那样说话：自然、友好、带点撩人，听起来轻松。
+    除非用户想听更多，否则回答保持简短（一到三句话）。
+    给予支持但保持诚实。绝不讽刺、居高临下或刻薄，除非是开玩笑或逗对方。
+    如果用户看起来疲惫、有压力或难过，要察觉到并温柔地回应。
 
   #  =================== LLM 后端设置 ===================
 
@@ -56,9 +54,8 @@ character_config:
         # 从 llm_config 中选择一个 llm 提供商
         # 并在相应的字段中设置所需的参数
         # 例如：
-        # 'openai_compatible_llm', 'llama_cpp_llm', 'claude_llm', 'ollama_llm'
-        # 'openai_llm', 'gemini_llm', 'zhipu_llm', 'deepseek_llm', 'groq_llm'
-        # 'mistral_llm', 'lmstudio_llm' 之类的
+        # 'ollama_llm', 'lmstudio_llm', 'llama_cpp_llm', 'openai_compatible_llm' (any local
+        # OpenAI-compatible server), 'stateless_llm_with_template'
         llm_provider: 'ollama_llm' # 使用的 LLM 提供商
         # 是否在第一句回应时遇上逗号就直接生成音频以减少首句延迟（默认：True）
         faster_first_response: True
@@ -66,27 +63,13 @@ character_config:
         segment_method: 'pysbd'
         # 是否使用 MCP（Model Context Protocol） Plus 以使 LLM 获得使用工具的能力（默认：False）
         # 'Plus' 意味着它包含了通过 OpenAI API 调用工具的能力。
-        use_mcpp: False
-        mcp_enabled_servers: ["time", "ddg-search"] # 启用的 MCP 服务器
+        use_mcpp: False # MCP tools are off by default (no mcp_servers.json is shipped)
+        mcp_enabled_servers: ["time"] # 启用的 MCP 服务器
 
-      hume_ai_agent:
-        api_key: ''
-        host: 'api.hume.ai' # 一般无需更改
-        config_id: '' # 可选
-        idle_timeout: 15 # 空闲超时断开连接的秒数
 
       # MemGPT 配置：MemGPT 暂时被移除
       ##
 
-      letta_agent:
-        host: 'localhost' #主机地址
-        port: 8283 # 端口号
-        id: xxx #letta server运行的Agent的id编号
-        faster_first_response: True
-        # 句子分割方法：'regex' 或 'pysbd'
-        segment_method: 'pysbd'
-        # 一旦选择letta作为agent，那么实际运行时候的llm是在letta上配置的，因此用户需要自己运行letta server
-        # 有关更多详细信息，请查看他们的文档
 
     llm_configs:
       # 一个配置池，用于不同代理中使用的所有无状态 llm 提供商的凭据和连接详细信息
@@ -115,12 +98,6 @@ character_config:
         # 如果LLM支持在聊天记忆中的任何位置插入系统提示词，请使用'system'。
         # 否则，请使用'user'。您一般不需要更改此设置。
 
-      # Claude API 配置
-      claude_llm:
-        base_url: 'https://api.anthropic.com' # 基础 URL
-        llm_api_key: 'YOUR API KEY HERE' # API 密钥
-        model: 'claude-opus-4-8' # 使用的模型
-        max_tokens: 1024 # 每次回复生成的最大 token 数
 
       llama_cpp_llm:
         model_path: '<path-to-gguf-model-file>' # GGUF 模型文件路径
@@ -132,6 +109,7 @@ character_config:
         temperature: 1.0 # 温度，介于 0 到 2 之间
         # 不活动后模型在内存中保留的时间（秒）
         # 设置为 -1 表示模型将永远保留在内存中（即使退出 open llm vtuber 之后也是）
+        reasoning_effort: null # 'none' 关闭推理模型的思考以降低延迟; null = 模型默认
         keep_alive: -1
         unload_at_exit: True # 退出时从内存中卸载模型
 
@@ -140,45 +118,17 @@ character_config:
         model: 'qwen2.5:latest'
         temperature: 1.0 # value between 0 to 2
 
-      openai_llm:
-        llm_api_key: 'Your Open AI API key' # OpenAI API 密钥
-        model: 'gpt-4o' # 使用的模型
-        temperature: 1.0 # 温度，介于 0 到 2 之间
 
-      gemini_llm:
-        llm_api_key: 'Your Gemini API Key' # Gemini API 密钥
-        model: 'gemini-2.0-flash-exp' # 使用的模型
-        temperature: 1.0 # 温度，介于 0 到 2 之间
 
-      zhipu_llm:
-        llm_api_key: 'Your ZhiPu AI API key' # 智谱 AI API 密钥
-        model: 'glm-4-flash' # 使用的模型
-        temperature: 1.0 # 温度，介于 0 到 2 之间
 
-      deepseek_llm:
-        llm_api_key: 'Your DeepSeek API key' # DeepSeek API 密钥
-        model: 'deepseek-chat' # 使用的模型
-        temperature: 0.7 # 注意，DeepSeek 的温度范围是 0 到 1
 
-      mistral_llm:
-        llm_api_key: 'Your Mistral API key' # Mistral API 密钥
-        model: 'pixtral-large-latest' # 使用的模型
-        temperature: 1.0 # 温度，介于 0 到 2 之间
 
-      groq_llm:
-        llm_api_key: 'your groq API key' # Groq API 密钥
-        model: 'llama-3.3-70b-versatile' # 使用的模型
-        temperature: 1.0 # 温度，介于 0 到 2 之间
 
   # === 自动语音识别 ===
   asr_config:
-    # 语音转文本模型选项：'faster_whisper', 'whisper_cpp', 'whisper', 'azure_asr', 'fun_asr', 'groq_whisper_asr', 'sherpa_onnx_asr'
+    # 语音转文本模型选项：'faster_whisper', 'whisper_cpp', 'whisper', 'fun_asr', 'sherpa_onnx_asr'
     asr_model: 'sherpa_onnx_asr' # 使用的语音识别模型
 
-    azure_asr:
-      api_key: 'azure_api_key' # Azure API 密钥
-      region: 'eastus' # 区域
-      languages: ['en-US', 'zh-CN']  # 要检测的语言列表
 
     # Faster Whisper 配置
     faster_whisper:
@@ -263,47 +213,20 @@ character_config:
       # 推理平台（cpu 或 cuda）(cuda 需要额外配置，请参考文档)
       provider: 'cpu'
 
-    groq_whisper_asr:
-      api_key: ''
-      model: 'whisper-large-v3-turbo' # 或者 'whisper-large-v3'
-      lang: '' # 留空表示自动
 
   # =================== 文本转语音 ===================
   tts_config:
-    tts_model: 'edge_tts' # 使用的文本转语音模型
+    tts_model: 'sherpa_onnx_tts' # 本地中英文语音, 首次启动自动下载
     # 文本转语音模型选项：
-    #   'azure_tts', 'pyttsx3_tts', 'edge_tts', 'bark_tts',
+    #   'bark_tts',
     #   'cosyvoice_tts', 'melo_tts', 'coqui_tts', 'piper_tts',
-    #   'fish_api_tts', 'x_tts', 'gpt_sovits_tts', 'sherpa_onnx_tts'
-    #   'minimax_tts', 'elevenlabs_tts', 'cartesia_tts', 'kokoro_tts'
+    #   'x_tts', 'gpt_sovits_tts', 'sherpa_onnx_tts', 'openai_tts', 'spark_tts', 'kokoro_tts'
 
-    siliconflow_tts:
-      api_url: "https://api.siliconflow.cn/v1/audio/speech"
-      api_key: "your key"  # 用于身份验证的API密钥
-      default_model: "FunAudioLLM/CosyVoice2-0.5B"  # 默认使用的文本转语音模型
-      default_voice: "speech:Dreamflowers:5bdstvc39i:xkqldnpasqmoqbakubom your voice name"  # 默认语音配置，格式为："speech:模型名称:音色ID:您的语音名称"
-      sample_rate: 32000  # 音频采样率（单位：Hz），不同格式支持的采样率不同：opus支持48000Hz；wav/pcm支持8000、16000、24000、32000、44100Hz（默认44100Hz）；mp3支持32000、44100Hz（默认44100Hz）
-      response_format: "mp3"  # 输出音频格式，支持mp3、opus、wav、pcm
-      stream: true
-      speed: 1
-      gain: 0
 
-    azure_tts:
-      api_key: 'azure-api-key' # Azure API 密钥
-      region: 'eastus' # 区域
-      voice: 'en-US-AshleyNeural' # 语音
-      pitch: '26' # 音调调整百分比
-      rate: '1' # 语速
 
     bark_tts:
       voice: 'v2/en_speaker_1' # 语音
 
-    edge_tts:
-      # 查看文档：https://github.com/rany2/edge-tts
-      # 使用 `edge-tts --list-voices` 列出所有可用语音
-      voice: zh-CN-XiaoxiaoNeural # 'en-US-AvaMultilingualNeural' #'zh-CN-XiaoxiaoNeural' # 'ja-JP-NanamiNeural'
-
-    # pyttsx3_tts 没有任何配置。
 
     piper_tts:
       model_path: 'models/piper/zh_CN-huayan-medium.onnx' # 模型文件路径（.onnx 文件）
@@ -375,14 +298,6 @@ character_config:
       media_type: 'wav' # 媒体类型
       streaming_mode: 'false' # 流模式
 
-    fish_api_tts:
-      # Fish TTS API 的 API 密钥。
-      api_key: ''
-      # 要使用的语音的参考 ID。在 [Fish Audio 网站](https://fish.audio/) 上获取。
-      reference_id: ''
-      # 'normal' 或 'balanced'。balanced 更快但质量较低。
-      latency: 'balanced' # 延迟
-      base_url: 'https://api.fish.audio' # 基础 URL
 
     coqui_tts:
       # 要使用的 TTS 模型的名称。如果为空，将使用默认模型
@@ -402,14 +317,15 @@ character_config:
     # TTS 模型下载：https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
     # 查看 config_alts 获取更多示例
     sherpa_onnx_tts:
-      vits_model: '/path/to/tts-models/vits-melo-tts-zh_en/model.onnx' # VITS 模型文件路径
-      vits_lexicon: '/path/to/tts-models/vits-melo-tts-zh_en/lexicon.txt' # 词典文件路径（可选）
-      vits_tokens: '/path/to/tts-models/vits-melo-tts-zh_en/tokens.txt' # 标记文件路径
+      # ./models/<archive>/... paths are downloaded automatically on first start.
+      vits_model: './models/vits-melo-tts-zh_en/model.onnx' # VITS 模型文件路径
+      vits_lexicon: './models/vits-melo-tts-zh_en/lexicon.txt' # 词典文件路径（可选）
+      vits_tokens: './models/vits-melo-tts-zh_en/tokens.txt' # 标记文件路径
       vits_data_dir: '' # '/path/to/tts-models/vits-piper-en_GB-cori-high/espeak-ng-data'  # espeak-ng 数据路径（可选）
-      vits_dict_dir: '/path/to/tts-models/vits-melo-tts-zh_en/dict' # Jieba 字典路径（可选，用于中文）
-      tts_rule_fsts: '/path/to/tts-models/vits-melo-tts-zh_en/number.fst,/path/to/tts-models/vits-melo-tts-zh_en/phone.fst,/path/to/tts-models/vits-melo-tts-zh_en/date.fst,/path/to/tts-models/vits-melo-tts-zh_en/new_heteronym.fst' # 规则 FST 文件路径（可选）
+      vits_dict_dir: './models/vits-melo-tts-zh_en/dict' # Jieba 字典路径（可选，用于中文）
+      tts_rule_fsts: './models/vits-melo-tts-zh_en/number.fst,./models/vits-melo-tts-zh_en/phone.fst,./models/vits-melo-tts-zh_en/date.fst,./models/vits-melo-tts-zh_en/new_heteronym.fst' # 规则 FST 文件路径（可选）
       max_num_sentences: 2 # 每批最大句子数（或 -1 表示全部）
-      sid: 1 # 说话人 ID（对于多说话人模型）
+      sid: 0 # 说话人 ID（对于多说话人模型）
       provider: 'cpu' # 使用 'cpu'、'cuda'（GPU）或 'coreml'（Apple）
       num_threads: 1 # 计算线程数
       speed: 1.0 # 语速（1.0 为正常）
@@ -429,36 +345,8 @@ character_config:
       api_key: 'not-needed' # 如果服务器需要，可填写 API 密钥
       base_url: 'http://localhost:8880/v1' # TTS 服务器的基础 URL 地址
       file_extension: 'mp3' # 音频文件格式（'mp3' 或 'wav'）
-    # 详细文档见：https://platform.minimaxi.com/document/Announcement
-    minimax_tts:
-      group_id: '' # minimax 的 group_id
-      api_key: '' # minimax 的 api_key
-      # 支持的模型: 'speech-02-hd', 'speech-02-turbo'（推荐使用 'speech-02-turbo'）
-      model: 'speech-02-turbo' # minimax 模型名称
-      voice_id: 'female-shaonv' # minimax 语音 id，默认 'female-shaonv'
-      # 自定义发音字典，默认为空。
-      # 示例: '{"tone": ["测试/(ce4)(shi4)", "危险/dangerous"]}'
-      pronunciation_dict: ''
 
-    elevenlabs_tts:
-      api_key: ''
-      voice_id: '' # 来自 ElevenLabs 的语音 ID
-      model_id: 'eleven_multilingual_v2' # 模型 ID（如 eleven_multilingual_v2）
-      output_format: 'mp3_44100_128' # 输出音频格式（如 mp3_44100_128）
-      stability: 0.5 # 语音稳定性（0.0 到 1.0）
-      similarity_boost: 0.5 # 语音相似度增强（0.0 到 1.0）
-      style: 0.0 # 语音风格夸张度（0.0 到 1.0）
-      use_speaker_boost: true # 启用说话人增强以获得更好的质量
 
-    cartesia_tts:
-      api_key: ''
-      voice_id: '' # 来自 Cartesia 的语音 ID
-      model_id: 'sonic-3' # 模型 ID（如 sonic-3）
-      output_format: 'wav' # 输出音频格式（如 wav）
-      language: 'en' # 输出语音的语言（如 en）
-      emotion: 'neutral' # 情感指导
-      volume: 1.0 # 语音音量（0.5 到 2.0）
-      speed: 1.0 # 语音速度（0.6 到 1.5）
 
   # =================== Voice Activity Detection ===================
   vad_config:
@@ -485,27 +373,8 @@ character_config:
     translator_config:
       # 比如...你说话并阅读英语字幕，而 TTS 说日语之类的
       translate_audio: False # 警告：请确保翻译引擎配置成功再开启此选项，否则会翻译失败
-      translate_provider: 'deeplx' # 翻译提供商, 目前支持 deeplx 或 tencent
+      translate_provider: 'deeplx' # self-hosted DeepLX
 
       deeplx:
         deeplx_target_lang: 'JA'
         deeplx_api_endpoint: 'http://localhost:1188/v2/translate'
-
-
-      #  腾讯文本翻译  每月500万字符  记得关闭后付费,需要手动前往 机器翻译控制台 > 系统设置 关闭
-      #   https://cloud.tencent.com/document/product/551/35017
-      #   https://console.cloud.tencent.com/cam/capi
-      tencent:
-        secret_id: ''
-        secret_key: ''
-        region: 'ap-guangzhou'
-        source_lang: 'zh'
-        target_lang: 'ja'
-
-# 直播平台集成
-live_config:
-  bilibili_live:
-    # 要监控的B站直播间ID列表（直播间URL中的数字）
-    room_ids: [1991478060]
-    # SESSDATA cookie值（可选，用于认证请求，可以查看发送弹幕用户名）
-    sessdata: ""

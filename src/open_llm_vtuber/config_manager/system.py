@@ -7,15 +7,12 @@ from .i18n import I18nMixin, Description
 class SystemConfig(I18nMixin):
     """System configuration settings."""
 
-    conf_version: str = Field(..., alias="conf_version")
     host: str = Field(..., alias="host")
     port: int = Field(..., alias="port")
     config_alts_dir: str = Field(..., alias="config_alts_dir")
     tool_prompts: Dict[str, str] = Field(..., alias="tool_prompts")
-    enable_proxy: bool = Field(False, alias="enable_proxy")
 
     DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "conf_version": Description(en="Configuration version", ja="設定バージョン"),
         "host": Description(en="Server host address", ja="サーバーのホストアドレス"),
         "port": Description(en="Server port number", ja="サーバーのポート番号"),
         "config_alts_dir": Description(
@@ -25,10 +22,6 @@ class SystemConfig(I18nMixin):
         "tool_prompts": Description(
             en="Tool prompts to be inserted into persona prompt",
             ja="ペルソナプロンプトに挿入するツールプロンプト",
-        ),
-        "enable_proxy": Description(
-            en="Enable proxy mode for multiple clients",
-            ja="複数クライアント向けのプロキシモードを有効にする",
         ),
     }
 

@@ -6,7 +6,7 @@ import json
 from loguru import logger
 
 from ..message_handler import message_handler
-from .types import WebSocketSend, BroadcastContext
+from .types import WebSocketSend
 from .tts_manager import TTSTaskManager
 from ..agent.output_types import SentenceOutput, AudioOutput
 from ..agent.input_types import BatchInput, TextData, ImageData, TextSource, ImageSource
@@ -163,7 +163,6 @@ async def finalize_conversation_turn(
     tts_manager: TTSTaskManager,
     websocket_send: WebSocketSend,
     client_uid: str,
-    broadcast_ctx: Optional[BroadcastContext] = None,
 ) -> None:
     """Finalize a conversation turn"""
     if tts_manager.task_list:
@@ -180,19 +179,11 @@ async def finalize_conversation_turn(
 
     await websocket_send(json.dumps({"type": "force-new-message"}))
 
-    if broadcast_ctx and broadcast_ctx.broadcast_func:
-        await broadcast_ctx.broadcast_func(
-            broadcast_ctx.group_members,
-            {"type": "force-new-message"},
-            broadcast_ctx.current_client_uid,
-        )
-
-    await send_conversation_end_signal(websocket_send, broadcast_ctx)
+    await send_conversation_end_signal(websocket_send)
 
 
 async def send_conversation_end_signal(
     websocket_send: WebSocketSend,
-    broadcast_ctx: Optional[BroadcastContext],
     session_emoji: str = "😊",
 ) -> None:
     """Send conversation chain end signal"""
@@ -202,12 +193,6 @@ async def send_conversation_end_signal(
     }
 
     await websocket_send(json.dumps(chain_end_msg))
-
-    if broadcast_ctx and broadcast_ctx.broadcast_func and broadcast_ctx.group_members:
-        await broadcast_ctx.broadcast_func(
-            broadcast_ctx.group_members,
-            chain_end_msg,
-        )
 
     logger.info(f"😎👍✅ Conversation Chain {session_emoji} completed!")
 

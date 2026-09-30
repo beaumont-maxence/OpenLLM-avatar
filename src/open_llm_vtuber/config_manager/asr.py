@@ -4,29 +4,6 @@ from typing import Literal, Optional, Dict, ClassVar
 from .i18n import I18nMixin, Description
 
 
-class AzureASRConfig(I18nMixin):
-    """Configuration for Azure ASR service."""
-
-    api_key: str = Field(..., alias="api_key")
-    region: str = Field(..., alias="region")
-    languages: list[str] = Field(["en-US", "zh-CN"], alias="languages")
-
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "api_key": Description(
-            en="API key for Azure ASR service",
-            ja="Azure ASRサービスのAPIキー",
-        ),
-        "region": Description(
-            en="Azure region (e.g., eastus)",
-            ja="Azureのリージョン（例: eastus）",
-        ),
-        "languages": Description(
-            en="List of languages to detect (e.g., ['en-US', 'zh-CN'])",
-            ja="検出する言語のリスト（例: ['en-US', 'zh-CN']）",
-        ),
-    }
-
-
 class FasterWhisperConfig(I18nMixin):
     """Configuration for Faster Whisper ASR."""
 
@@ -141,7 +118,9 @@ class FunASRConfig(I18nMixin):
     language: str = Field("auto", alias="language")
 
     DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "model_name": Description(en="Name of the FunASR model", ja="FunASRモデルの名前"),
+        "model_name": Description(
+            en="Name of the FunASR model", ja="FunASRモデルの名前"
+        ),
         "vad_model": Description(
             en="Voice Activity Detection model",
             ja="音声区間検出（VAD）モデル",
@@ -170,29 +149,6 @@ class FunASRConfig(I18nMixin):
         "language": Description(
             en="Language code (e.g., auto, zh, en)",
             ja="言語コード（例: auto、zh、en）",
-        ),
-    }
-
-
-class GroqWhisperASRConfig(I18nMixin):
-    """Configuration for Groq Whisper ASR."""
-
-    api_key: str = Field(..., alias="api_key")
-    model: str = Field("whisper-large-v3-turbo", alias="model")
-    lang: Optional[str] = Field(None, alias="lang")
-
-    DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
-        "api_key": Description(
-            en="API key for Groq Whisper ASR",
-            ja="Groq Whisper ASRのAPIキー",
-        ),
-        "model": Description(
-            en="Name of the Groq Whisper model to use",
-            ja="使用するGroq Whisperモデルの名前",
-        ),
-        "lang": Description(
-            en="Language code (leave empty for auto-detect)",
-            ja="言語コード（自動検出する場合は空欄のまま）",
         ),
     }
 
@@ -248,8 +204,12 @@ class SherpaOnnxASRConfig(I18nMixin):
             en="Path to paraformer model",
             ja="Paraformerモデルへのパス",
         ),
-        "nemo_ctc": Description(en="Path to NeMo CTC model", ja="NeMo CTCモデルへのパス"),
-        "wenet_ctc": Description(en="Path to WeNet CTC model", ja="WeNet CTCモデルへのパス"),
+        "nemo_ctc": Description(
+            en="Path to NeMo CTC model", ja="NeMo CTCモデルへのパス"
+        ),
+        "wenet_ctc": Description(
+            en="Path to WeNet CTC model", ja="WeNet CTCモデルへのパス"
+        ),
         "tdnn_model": Description(en="Path to TDNN model", ja="TDNNモデルへのパス"),
         "whisper_encoder": Description(
             en="Path to Whisper encoder model",
@@ -272,7 +232,9 @@ class SherpaOnnxASRConfig(I18nMixin):
             ja="FireredASRデコーダーモデルへのパス",
         ),
         "tokens": Description(en="Path to tokens file", ja="トークンファイルへのパス"),
-        "num_threads": Description(en="Number of threads to use", ja="使用するスレッド数"),
+        "num_threads": Description(
+            en="Number of threads to use", ja="使用するスレッド数"
+        ),
         "use_itn": Description(
             en="Enable inverse text normalization",
             ja="逆テキスト正規化を有効にする",
@@ -344,19 +306,13 @@ class ASRConfig(I18nMixin):
         "faster_whisper",
         "whisper_cpp",
         "whisper",
-        "azure_asr",
         "fun_asr",
-        "groq_whisper_asr",
         "sherpa_onnx_asr",
     ] = Field(..., alias="asr_model")
-    azure_asr: Optional[AzureASRConfig] = Field(None, alias="azure_asr")
     faster_whisper: Optional[FasterWhisperConfig] = Field(None, alias="faster_whisper")
     whisper_cpp: Optional[WhisperCPPConfig] = Field(None, alias="whisper_cpp")
     whisper: Optional[WhisperConfig] = Field(None, alias="whisper")
     fun_asr: Optional[FunASRConfig] = Field(None, alias="fun_asr")
-    groq_whisper_asr: Optional[GroqWhisperASRConfig] = Field(
-        None, alias="groq_whisper_asr"
-    )
     sherpa_onnx_asr: Optional[SherpaOnnxASRConfig] = Field(
         None, alias="sherpa_onnx_asr"
     )
@@ -366,7 +322,6 @@ class ASRConfig(I18nMixin):
             en="Speech-to-text model to use",
             ja="使用する音声認識（Speech-to-text）モデル",
         ),
-        "azure_asr": Description(en="Configuration for Azure ASR", ja="Azure ASRの設定"),
         "faster_whisper": Description(
             en="Configuration for Faster Whisper",
             ja="Faster Whisperの設定",
@@ -377,10 +332,6 @@ class ASRConfig(I18nMixin):
         ),
         "whisper": Description(en="Configuration for Whisper", ja="Whisperの設定"),
         "fun_asr": Description(en="Configuration for FunASR", ja="FunASRの設定"),
-        "groq_whisper_asr": Description(
-            en="Configuration for Groq Whisper ASR",
-            ja="Groq Whisper ASRの設定",
-        ),
         "sherpa_onnx_asr": Description(
             en="Configuration for Sherpa Onnx ASR",
             ja="Sherpa Onnx ASRの設定",
