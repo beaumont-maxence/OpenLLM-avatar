@@ -84,6 +84,7 @@ character = validate_config(read_yaml("conf.yaml")).character_config
 asr, tts = character.asr_config, character.tts_config
 ASRFactory.get_asr_system(asr.asr_model, **getattr(asr, asr.asr_model).model_dump())
 TTSFactory.get_tts_engine(tts.tts_model, **getattr(tts, tts.tts_model).model_dump())
+TTSFactory.get_tts_engine("kokoro_tts")  # Japanese fallback voice of "Yui (日本語)"
 EOF
 
 cat <<'EOF'

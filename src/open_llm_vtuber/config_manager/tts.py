@@ -401,9 +401,9 @@ class KokoroTTSConfig(I18nMixin):
 
     model_path: str = Field("models/kokoro/kokoro-v1.0.onnx", alias="model_path")
     voices_path: str = Field("models/kokoro/voices-v1.0.bin", alias="voices_path")
-    voice: str = Field("af_sarah", alias="voice")
+    voice: str = Field("jf_alpha", alias="voice")
     speed: float = Field(1.0, alias="speed")
-    lang: str = Field("en-us", alias="lang")
+    lang: Literal["ja"] = Field("ja", alias="lang")
 
     DESCRIPTIONS: ClassVar[Dict[str, Description]] = {
         "model_path": Description(
@@ -429,23 +429,28 @@ class KokoroTTSConfig(I18nMixin):
     }
 
 
+TTSModelName = Literal[
+    "bark_tts",
+    "cosyvoice_tts",
+    "cosyvoice2_tts",
+    "melo_tts",
+    "coqui_tts",
+    "x_tts",
+    "gpt_sovits_tts",
+    "sherpa_onnx_tts",
+    "openai_tts",
+    "spark_tts",
+    "piper_tts",
+    "kokoro_tts",
+]
+
+
 class TTSConfig(I18nMixin):
     """Configuration for Text-to-Speech."""
 
-    tts_model: Literal[
-        "bark_tts",
-        "cosyvoice_tts",
-        "cosyvoice2_tts",
-        "melo_tts",
-        "coqui_tts",
-        "x_tts",
-        "gpt_sovits_tts",
-        "sherpa_onnx_tts",
-        "openai_tts",  # Add openai_tts here
-        "spark_tts",
-        "piper_tts",
-        "kokoro_tts",
-    ] = Field(..., alias="tts_model")
+    tts_model: TTSModelName = Field(..., alias="tts_model")
+    # Used when the main engine fails, e.g. the GPT-SoVITS server is not running.
+    fallback_tts_model: Optional[TTSModelName] = Field(None, alias="fallback_tts_model")
 
     bark_tts: Optional[BarkTTSConfig] = Field(None, alias="bark_tts")
     cosyvoice_tts: Optional[CosyvoiceTTSConfig] = Field(None, alias="cosyvoice_tts")
@@ -511,5 +516,11 @@ class TTSConfig(I18nMixin):
             raise ValueError(
                 f"tts_model is set to '{values.tts_model}' but the "
                 f"'{values.tts_model}' configuration block is missing"
+            )
+        fallback = values.fallback_tts_model
+        if fallback and getattr(values, fallback, None) is None:
+            raise ValueError(
+                f"fallback_tts_model is set to '{fallback}' but the "
+                f"'{fallback}' configuration block is missing"
             )
         return values

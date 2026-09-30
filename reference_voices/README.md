@@ -3,6 +3,13 @@
 Reference audio clips for zero-shot voice cloning via GPT-SoVITS.
 Only clone voices you own or have explicit permission to use.
 
+## Yui's Japanese voice
+
+`characters/yui_ja.yaml` clones `reference_voices/testvoice.wav`. To use another clip,
+change `ref_audio_path` there (relative paths are from the project root), and put the
+clip's exact transcript in `prompt_text`. Leaving `prompt_text` empty works but sounds
+less like the clip.
+
 ## Adding a voice
 
 1. Record or obtain a **clean 3–10 second WAV** of the target voice

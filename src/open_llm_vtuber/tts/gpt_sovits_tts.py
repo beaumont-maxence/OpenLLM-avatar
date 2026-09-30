@@ -2,6 +2,7 @@
 # change from xTTS.py
 ####
 
+import os
 import re
 import requests
 from loguru import logger
@@ -23,7 +24,8 @@ class TTSEngine(TTSInterface):
     ):
         self.api_url = api_url
         self.text_lang = text_lang
-        self.ref_audio_path = ref_audio_path
+        # The GPT-SoVITS server runs in its own folder, so send it an absolute path.
+        self.ref_audio_path = os.path.abspath(ref_audio_path) if ref_audio_path else ""
         self.prompt_lang = prompt_lang
         self.prompt_text = prompt_text
         self.text_split_method = text_split_method

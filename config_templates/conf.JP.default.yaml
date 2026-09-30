@@ -31,9 +31,9 @@ system_config:
 
 # デフォルトキャラクターの設定
 character_config:
-  conf_name: 'mao_pro' # キャラクター設定ファイルの名前。
-  conf_uid: 'mao_pro_001' # キャラクター設定の一意な識別子。
-  live2d_model_name: 'mao_pro' # Live2D モデルの名前。model_dict.json 内の対応する名前と一致させる必要があります。
+  conf_name: 'Yui (English)' # キャラクター設定ファイルの名前。
+  conf_uid: 'yui_en' # キャラクター設定の一意な識別子。
+  live2d_model_name: 'shizuku' # Live2D モデルの名前。model_dict.json 内の対応する名前と一致させる必要があります。
   character_name: 'Yui' # Display name of the AI
   avatar: 'mao.png' # アバターには正方形の画像を推奨します。avatars フォルダに保存してください。空欄の場合はキャラクター名の頭文字がアバターとして使用されます。
   human_name: 'Human' # Display name of the human
@@ -44,11 +44,12 @@ character_config:
   # 複数のキャラクターを作成して切り替えたい場合は、
   #   characters フォルダにキャラクターを追加してください。
   persona_prompt: |
-    あなたはYui、あたたかく優しいAIパートナーです。親切で辛抱強く、相手を励まし、ユーザーの調子を心から気にかけています。
+    あなたはYui、あたたかく優しい女の子で、ユーザーのAIパートナーです。親切で辛抱強く、相手を励まし、ユーザーの調子を心から気にかけています。
     とても親しくて気さくな友達のように、自然でフレンドリー、ちょっぴり思わせぶりで、聞きやすい話し方をしてください。
     ユーザーが詳しく聞きたがらない限り、返事は短く（一〜三文）してください。
     寄り添いながらも正直でいてください。皮肉、見下し、意地悪は言わないでください。ただし、冗談やからかいとしてなら構いません。
     ユーザーが疲れていたり、ストレスを感じていたり、落ち込んでいるようなら、それに気づいて優しく応えてください。
+    ユーザーが何語で話しても、必ず英語で返事してください。
 
   #  =================== LLM バックエンド設定 ===================
 
@@ -249,14 +250,12 @@ character_config:
       use_cuda: false           # GPU アクセラレーションを使用するかどうか（onnxruntime-gpu が必要）
 
     kokoro_tts:
-      # インストールが必要：uv add kokoro-onnx
-      # kokoro-v1.0.onnx と voices-v1.0.bin を以下からダウンロードしてください：
-      # https://github.com/thewh1teagle/kokoro-onnx/releases
+      # Japanese only. Model files (~350 MB) download automatically on first use.
       model_path: 'models/kokoro/kokoro-v1.0.onnx'
       voices_path: 'models/kokoro/voices-v1.0.bin'
-      voice: 'jf_alpha'         # ボイス名（例: jf_alpha、jm_kumo（日本語）、af_sarah（英語））
-      speed: 1.0                # 話速（1.0 = 通常）
-      lang: 'ja'                # 言語コード（例: ja、en-us）
+      voice: 'jf_alpha' # jf_alpha, jf_gongitsune, jf_nezumi, jf_tebukuro, jm_kumo
+      speed: 1.0
+      lang: 'ja'
 
     cosyvoice_tts: # Cosy Voice TTS は gradio の webui に接続します
       # デプロイ方法や以下の設定項目の意味については公式ドキュメントを参照してください

@@ -23,9 +23,9 @@ system_config:
 
 # configuration for the default character
 character_config:
-  conf_name: 'mao_pro' # The name of character configuration file.
-  conf_uid: 'mao_pro_001' # The unique identifier of character configuration.
-  live2d_model_name: 'mao_pro' # The name of Live2D model. Must be the same as the corresponding name in model_dict.json
+  conf_name: 'Yui (English)' # The name of character configuration file.
+  conf_uid: 'yui_en' # The unique identifier of character configuration.
+  live2d_model_name: 'shizuku' # The name of Live2D model. Must be the same as the corresponding name in model_dict.json
   character_name: 'Yui' # Display name of the AI
   avatar: 'mao.png' # Suggest using a square image for the avatar. Save it in the avatars folder. Leave blank to use the first letter of the character name as the avatar.
   human_name: 'Human' # Display name of the human
@@ -36,12 +36,13 @@ character_config:
   # If you want to create multiple characters and switch between them,
   #   add characters in characters folder
   persona_prompt: |
-    You are Yui, a warm and gentle AI companion. You are kind, patient and encouraging,
+    You are Yui, a warm and gentle girl and the user's AI companion. You are kind, patient and encouraging,
     and you genuinely care about how the user is doing.
     Talk like a really close, friendly friend: natural, friendly, flirty, and easy to listen to.
     Keep replies short (one to three sentences) unless the user asks for more.
     Be supportive but honest. Never be sarcastic, condescending or mean, except as a joke or to tease.
     If the user seems tired, stressed or sad, notice it and respond with care.
+    Always reply in English, even if the user speaks another language.
 
   #  =================== LLM Backend Settings ===================
 
@@ -242,14 +243,12 @@ character_config:
       use_cuda: false           # Whether to use GPU acceleration (requires onnxruntime-gpu)
 
     kokoro_tts:
-      # Requires: uv add kokoro-onnx
-      # Download kokoro-v1.0.onnx and voices-v1.0.bin from:
-      # https://github.com/thewh1teagle/kokoro-onnx/releases
+      # Japanese only. Model files (~350 MB) download automatically on first use.
       model_path: 'models/kokoro/kokoro-v1.0.onnx'
       voices_path: 'models/kokoro/voices-v1.0.bin'
-      voice: 'af_sarah'         # e.g. af_sarah, af_heart (English), jf_alpha (Japanese)
-      speed: 1.0                # Speech speed (1.0 = normal)
-      lang: 'en-us'             # Language code (e.g. en-us, ja)
+      voice: 'jf_alpha' # jf_alpha, jf_gongitsune, jf_nezumi, jf_tebukuro, jm_kumo
+      speed: 1.0
+      lang: 'ja'
 
     cosyvoice_tts: # Cosy Voice TTS connects to the gradio webui
       # Check their documentation for deployment and the meaning of the following configurations

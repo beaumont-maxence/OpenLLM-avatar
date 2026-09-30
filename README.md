@@ -53,6 +53,15 @@ Open http://localhost:12393 in your browser once the server says it's running.
 Only local engines are included; the upstream cloud providers (Claude, OpenAI,
 Azure, ElevenLabs, Edge TTS, and others) were removed, so no API keys are needed.
 
+## English or Japanese
+
+Pick **Yui (English)** or **Yui (日本語)** in the web UI's character menu. Yui replies
+in that language whatever language you speak. English uses the built-in local voice.
+Japanese uses the built-in Kokoro voice, or a cloned voice when a
+[GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS) server is running (setup and
+choosing the voice clip: [reference_voices/README.md](./reference_voices/README.md)).
+The Japanese profile is `characters/yui_ja.yaml`.
+
 ## Camera and microphone permissions
 
 - The browser only allows the camera and microphone on **localhost or HTTPS**. To

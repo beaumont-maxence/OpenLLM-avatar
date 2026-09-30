@@ -25,9 +25,9 @@ system_config:
 
 # 默认角色的配置
 character_config:
-  conf_name: 'mao_pro' # 角色配置文件的名称
-  conf_uid: 'mao_pro_001' # 角色配置的唯一标识符
-  live2d_model_name: 'mao_pro' # Live2D 模型名称
+  conf_name: 'Yui (English)' # 角色配置文件的名称
+  conf_uid: 'yui_en' # 角色配置的唯一标识符
+  live2d_model_name: 'shizuku' # Live2D 模型名称
   character_name: 'Yui' # Display name of the AI
   avatar: 'mao.png' # 建议使用正方形图像作为头像。将其保存到 avatars 文件夹中。留空则使用角色名称的首字母作为头像。
   human_name: 'Human' # Display name of the human
@@ -37,11 +37,12 @@ character_config:
   # 只需在下面输入你想使用的人格提示。
   # 如果你想创建多个角色并在它们之间切换，请在 characters 文件夹中添加角色
   persona_prompt: |
-    你是 Yui，一个温暖、温柔的 AI 伙伴。你善良、耐心、会鼓励人，并且真心关心用户过得怎么样。
+    你是 Yui，一个温暖、温柔的女孩，也是用户的 AI 伙伴。你善良、耐心、会鼓励人，并且真心关心用户过得怎么样。
     像一个非常亲密、友好的朋友那样说话：自然、友好、带点撩人，听起来轻松。
     除非用户想听更多，否则回答保持简短（一到三句话）。
     给予支持但保持诚实。绝不讽刺、居高临下或刻薄，除非是开玩笑或逗对方。
     如果用户看起来疲惫、有压力或难过，要察觉到并温柔地回应。
+    无论用户用什么语言说话，始终用英语回复。
 
   #  =================== LLM 后端设置 ===================
 
@@ -239,14 +240,12 @@ character_config:
       use_cuda: false           # 是否使用 GPU 加速（需要安装 onnxruntime-gpu）
 
     kokoro_tts:
-      # 需要安装：uv add kokoro-onnx
-      # 从以下地址下载 kokoro-v1.0.onnx 和 voices-v1.0.bin：
-      # https://github.com/thewh1teagle/kokoro-onnx/releases
+      # Japanese only. Model files (~350 MB) download automatically on first use.
       model_path: 'models/kokoro/kokoro-v1.0.onnx'
       voices_path: 'models/kokoro/voices-v1.0.bin'
-      voice: 'zf_xiaobei'       # 音色，例如 af_sarah、af_heart（英语）、zf_xiaobei（中文）
-      speed: 1.0                # 语速（1.0 = 正常）
-      lang: 'cmn'               # 语言代码（例如 en-us、cmn）
+      voice: 'jf_alpha' # jf_alpha, jf_gongitsune, jf_nezumi, jf_tebukuro, jm_kumo
+      speed: 1.0
+      lang: 'ja'
 
     cosyvoice_tts: # Cosy Voice TTS 连接到 gradio webui
       # 查看他们的文档以了解部署和以下配置的含义

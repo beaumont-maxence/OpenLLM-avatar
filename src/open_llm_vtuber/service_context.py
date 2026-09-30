@@ -20,6 +20,7 @@ from .mcpp.tool_adapter import ToolAdapter
 
 from .asr.asr_factory import ASRFactory
 from .tts.tts_factory import TTSFactory
+from .tts.fallback_tts import FallbackTTS
 from .vad.vad_factory import VADFactory
 from .agent.agent_factory import AgentFactory
 from .translate.translate_factory import TranslateFactory
@@ -329,10 +330,25 @@ class ServiceContext:
     def init_tts(self, tts_config: TTSConfig) -> None:
         if not self.tts_engine or (self.character_config.tts_config != tts_config):
             logger.info(f"Initializing TTS: {tts_config.tts_model}")
-            self.tts_engine = TTSFactory.get_tts_engine(
-                tts_config.tts_model,
-                **getattr(tts_config, tts_config.tts_model.lower()).model_dump(),
-            )
+
+            def build(name: str) -> TTSInterface:
+                return TTSFactory.get_tts_engine(
+                    name, **getattr(tts_config, name.lower()).model_dump()
+                )
+
+            fallback = tts_config.fallback_tts_model
+            if not fallback:
+                self.tts_engine = build(tts_config.tts_model)
+            else:
+                logger.info(f"Initializing fallback TTS: {fallback}")
+                try:
+                    primary = build(tts_config.tts_model)
+                except Exception as e:
+                    logger.warning(
+                        f"{tts_config.tts_model} unavailable ({e}); using {fallback}"
+                    )
+                    primary = None
+                self.tts_engine = FallbackTTS(primary, build(fallback))
             # saving config should be done after successful initialization
             self.character_config.tts_config = tts_config
         else:
@@ -441,6 +457,12 @@ class ServiceContext:
 
         for prompt_name, prompt_file in self.system_config.tool_prompts.items():
             if prompt_name == "proactive_speak_prompt":
+                continue
+            # Models without expressions (empty emotionMap) get no emotion-tag instructions.
+            if (
+                prompt_name == "live2d_expression_prompt"
+                and not self.live2d_model.emo_map
+            ):
                 continue
 
             prompt_content = prompt_loader.load_util(prompt_file)
